@@ -48,10 +48,10 @@ return [
 
         'primary' => [
             'driver'    => 'mysql',
-            'host'      => '',
-            'database'  => '',
-            'username'  => '',
-            'password'  => '',
+            'host'      => '127.0.0.1',
+            'database'  => 'moneytable_hrm',
+            'username'  => 'root',
+            'password'  => 'Hrm4PassW@rd',
             'charset'   => 'utf8',
             'collation' => 'utf8_unicode_ci',
             'prefix'    => '',

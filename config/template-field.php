@@ -1,0 +1,4 @@
+<?php
+return array(
+	'employee' => 'CURRENT_DATE_TIME, CURRENT_DATE, NAME, USERNAME, EMAIL, DESIGNATION, DEPARTMENT', 
+	);

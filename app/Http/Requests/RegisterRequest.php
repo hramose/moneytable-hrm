@@ -32,7 +32,7 @@ class RegisterRequest extends Request
                     'password' => 'required|confirmed|min:6',
                     'employee_code' => 'required|unique:profile',
                     'email' => 'required|email|max:255|unique:users',
-                    'username' => 'required|min:4|max:255|alpha_num|unique:users',
+                    'username' => 'required|min:4|max:255|unique:users',
                     'password_confirmation' => 'required|same:password'
                 ];
     }

@@ -42,9 +42,13 @@ return array(
 		'link' => 'configuration#contract-type',
 		),
 	'leave' => array(
-		'weightage' => 10,
+		'weightage' => 5,
 		'tab' => 1,
 		'link' => 'configuration#leave',
+		),
+	'location' => array(
+		'weightage' => 5,
+		'link' => 'location',
 		),
 	'department' => array(
 		'weightage' => 10,

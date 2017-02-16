@@ -39,6 +39,8 @@
 					<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.leave').' '.trans('messages.request') !!}
 					@if(Entrust::can('request_leave'))
 					<div class="additional-btn">
+						<a href="/leave-analysis"><button class="btn btn-sm btn-primary"><i class="fa fa-line-chart icon"></i> {!! trans('messages.leave')!!} Analysis</button></a>
+						<a href="/leave-statistics"><button class="btn btn-sm btn-primary"><i class="fa fa-bars icon"></i> {!! trans('messages.leave').' '.trans('messages.statistics') !!}</button></a>
 						<a href="#" data-toggle="collapse" data-target="#box-detail"><button class="btn btn-sm btn-primary"><i class="fa fa-plus icon"></i> {!! trans('messages.request') !!}</button></a>
 					</div>
 					@endif
@@ -46,16 +48,6 @@
 					@include('common.datatable',['col_heads' => $col_heads])
 				</div>
 			</div>
-		</div>
-
-		<div class="row" id="leave-graph">
-		@foreach($leave_types as $leave_type)
-				<div class="col-md-12">
-					<div class="box-info">
-						<div id="{{\App\Classes\Helper::createSlug($leave_type)}}-graph"></div>
-					</div>
-				</div>
-		@endforeach
 		</div>
 
 	@stop

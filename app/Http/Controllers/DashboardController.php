@@ -13,13 +13,10 @@ class DashboardController extends Controller
 {
     use BasicController;
 
-    public function test(){
-        return view('test');
-    }
-
    public function index(){
 
         $date = date('Y-m-d');
+
         $time = date('H:i:s');
         $my_shift = Helper::getShift($date);
 
@@ -48,6 +45,7 @@ class DashboardController extends Controller
         $dept_count = \App\Department::count();
         $task_count = \App\Task::where('progress','<',100)->count();
         $present_count = \App\Clock::where('date','=',date('Y-m-d'))->groupBy('user_id')->get();
+        $leave_count = 0;
         $employee = \App\User::find(Auth::user()->id);
         
         $start_date = date('Y-m-d', strtotime('-7 days'));
@@ -81,9 +79,12 @@ class DashboardController extends Controller
             $absent = ($graph_holiday) ? 0 : \App\User::whereStatus('active')->count()-$leave-$present;
             $dayw = date('d-M-Y',strtotime($day)).(($graph_holiday) ? ' (Holiday)' : '');
             $daily_employee_attendance[] = array($dayw,$present,$absent,$leave);
+
+            if($i == 0)
+                $leave_count = $leave;
         }
 
-        if(Entrust::hasRole('system_administrator'))
+        if(defaultRole())
         $tasks = \App\Task::where('progress','<',100)->orderBy('created_at','desc')->take('5')->get();
         else
         $tasks = \App\Task::where('progress','<',100)->whereHas('user', function($q){
@@ -204,7 +205,7 @@ class DashboardController extends Controller
         $menu = ['dashboard'];
 
         return view('dashboard',compact(
-            'assets','clock_status','user_count','dept_count','task_count','present_count','employee','compose_users','daily_employee_attendance','tasks','announcements',
+            'assets','clock_status','user_count','dept_count','task_count','leave_count','employee','compose_users','daily_employee_attendance','tasks','announcements',
             'birthdays','holidays','events','tree','child_staff_count','my_shift','clocks','celebrations','menu','count_office_shift'
             ));
    }
@@ -221,12 +222,8 @@ class DashboardController extends Controller
 
             if($activity->activity == 'activity_added')
                 $description = trans('messages.new').' '.trans('messages.'.$activity->module).' '.trans('messages.'.$activity->activity);
-            elseif($activity->activity == 'activity_updated')
-                $description = trans('messages.'.$activity->module).' '.trans('messages.'.$activity->activity);
-            elseif($activity->activity == 'activity_deleted')
-                $description = trans('messages.'.$activity->module).' '.trans('messages.'.$activity->activity);
             else
-                $description = trans('messages.'.$activity->activity);
+                $description = trans('messages.'.$activity->module).' '.trans('messages.'.$activity->activity);
 
             $data .= '<li class="media">
                 <a class="pull-left" href="#">'.Helper::getAvatar($activity->user_id).'</a>

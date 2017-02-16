@@ -6,6 +6,15 @@
 				<div class="col-md-10">
 					{!! Form::open(['files'=>'true','route' => 'message.store','role' => 'form', 'class'=>'compose-form','id' => 'compose-form','data-submit' => 'noAjax']) !!}
 						<div class="form-group">
+							{!! Form::label('message_category_id',trans('messages.category'),['class' => 'control-label'])!!}
+							{!! Form::select('message_category_id', [null=>trans('messages.select_one')] + $message_categories, '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						</div>
+						<div class="form-group">
+							{!! Form::label('message_category_id',trans('messages.priority'),['class' => 'control-label'])!!}
+							{!! Form::select('message_priority_id', [null=>trans('messages.select_one')] + $message_priorities, '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						</div>
+						<div class="form-group">
+							{!! Form::label('message_category_id',trans('messages.receiver'),['class' => 'control-label'])!!}
 							{!! Form::select('to_user_id', [null=>trans('messages.select_one')] + $users, '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
 						</div>
 						<div class="form-group">

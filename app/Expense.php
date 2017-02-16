@@ -14,6 +14,11 @@ class Expense extends Eloquent {
 	protected $primaryKey = 'id';
 	protected $table = 'expenses';
 
+    public function expenseStatusDetail()
+    {
+        return $this->hasMany('App\ExpenseStatusDetail'); 
+    }
+
 	public function expenseHead()
     {
         return $this->belongsTo('App\ExpenseHead');

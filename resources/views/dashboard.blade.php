@@ -44,13 +44,15 @@
 					<div class="clear"></div>
 					<br />
 					@if(Entrust::can('upload_attendance'))
-						{!! Form::open(['files' => 'true','route' => 'clock.uploadAttendance','role' => 'form', 'class'=>'form-inline upload-attendance-form']) !!}
+						<div style="padding:10px;">
+						{!! Form::open(['files' => 'true','route' => 'clock.upload-attendance','role' => 'form', 'class'=>'form-inline upload-attendance-form','id' => 'upload-attendance-form', 'data-submit' => 'noAjax']) !!}
 						  <div class="form-group">
 							<label class="sr-only" for="file">{!! trans('messages.upload_file') !!}</label>
 							<input type="file" name="file" id="file" class="btn btn-info" title="{!! trans('messages.select').' '.trans('messages.file') !!}">
 						  </div>
-						  <button type="submit" class="btn btn-default">{!! trans('messages.upload') !!}</button>
-						  <div class="help-block"><strong>{!! trans('messages.note') !!}</strong> {!! trans('messages.only_xls_file_allowed') !!} <br /><a href="{!! URL::to('/sample.xlsx') !!}">{!! trans('messages.sample_file') !!}</a></div>
+						  {!! Form::submit(trans('messages.upload'),['class' => 'btn btn-primary']) !!}
+						  <div class="help-block"><strong>{!! trans('messages.note') !!}</strong> {!! trans('messages.only_csv_file_allowed') !!} <br /><a href="/attendance-sample-file" data-toggle="modal" data-target="#myModal">Click here for Sample</a></div>
+						  </div>
 						{!! Form::close() !!}
 					@endif
 				</div>
@@ -96,11 +98,26 @@
 						<div id="daily-employee-attendance"></div>
 					</div>
 				</div>
-				
 			</div>
 		</div>
-		@endif
 		<div class="row">
+			<a href="/location"><div class="col-sm-3 col-xs-6">
+				<div class="box-info">
+					<div class="icon-box">
+						<span class="fa-stack">
+						  <i class="fa fa-circle fa-stack-2x danger"></i>
+						  <i class="fa fa-tasks fa-stack-1x fa-inverse"></i>
+						  <!-- <strong class="fa-stack-1x icon-stack">R</strong> -->
+						</span>
+					</div>
+					<div class="text-box">
+						<h3>{!! \App\Location::count() !!}</h3>
+						<p>{!! trans('messages.location') !!}</p>
+					</div>
+					<div class="clear"></div>
+				</div>
+			</div>
+			</a>
 			<a href="/department"><div class="col-sm-3 col-xs-6">
 				<div class="box-info">
 					<div class="icon-box">
@@ -140,30 +157,14 @@
 						</span>
 					</div>
 					<div class="text-box">
-						<h3>{!! count($present_count) !!}</h3>
-						<p>{!! trans('messages.present_employee') !!}</p>
+						<h3>{!! $leave_count !!}</h3>
+						<p>{!! trans('messages.leave') !!}</p>
 					</div>
 					<div class="clear"></div>
 				</div>
 			</div></a>
-			<a href="/task"><div class="col-sm-3 col-xs-6">
-				<div class="box-info">
-					<div class="icon-box">
-						<span class="fa-stack">
-						  <i class="fa fa-circle fa-stack-2x danger"></i>
-						  <i class="fa fa-tasks fa-stack-1x fa-inverse"></i>
-						  <!-- <strong class="fa-stack-1x icon-stack">R</strong> -->
-						</span>
-					</div>
-					<div class="text-box">
-						<h3>{!! $task_count !!}</h3>
-						<p>{!! trans('messages.pending_task') !!}</p>
-					</div>
-					<div class="clear"></div>
-				</div>
-			</div>
-			</a>
 		</div>
+		@endif
 
 		<div class="row">
 			<div class="col-sm-6">

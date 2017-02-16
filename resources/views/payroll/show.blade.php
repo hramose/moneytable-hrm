@@ -85,7 +85,7 @@
 						<a href="/payroll/generate/mail/{{$payroll_slip->id}}" data-toggle="tooltip" title="{{trans('messages.mail')}}"><button class="btn btn-xs btn-success"><i class="fa fa-envelope icon"></i></button></a>
 						<a href="/payroll/generate/print/{{$payroll_slip->id}}" target="_blank" data-toggle="tooltip" title="{{trans('messages.print')}}"><button class="btn btn-xs btn-primary"><i class="fa fa-print icon"></i></button></a>
 						<a href="/payroll/generate/pdf/{{$payroll_slip->id}}" data-toggle="tooltip" title="{{trans('messages.generate_pdf')}}"><button class="btn btn-xs btn-warning"><i class="fa fa-file-pdf-o icon"></i></button></a>
-						<a href="/payroll/{{$payroll_slip->id}}/edit" data-toggle="modal" data-target="#myModal"><button class="btn btn-xs btn-default" data-toggle="tooltip" title="{{trans('messages.edit')}}"><i class="fa fa-edit icon"></i></button></a>
+						<a href="#" data-href="/payroll/{{$payroll_slip->id}}/edit" data-toggle="modal" data-target="#myModal"><button class="btn btn-xs btn-default" data-toggle="tooltip" title="{{trans('messages.edit')}}"><i class="fa fa-edit icon"></i></button></a>
 						{!!delete_form(['payroll.destroy',$payroll_slip->id])!!}
 					</div>
 					</h2>
@@ -109,6 +109,7 @@
 								<th>{!! trans('messages.payslip_no') !!} </td>
 								<th>{!! str_pad($payroll_slip->id, 3, 0, STR_PAD_LEFT) !!}</th>
 							</tr>
+							@if(!$payroll_slip->hourly_payroll)
 							<tr>
 								<td colspan = "2" valign="top" style="padding:0px;">
 									<table class="table" style="border:0px">
@@ -118,7 +119,6 @@
 												<td align="right">{!! trans('messages.amount') !!} </td>
 											</tr>
 										</thead>
-										<?php $total_earning = 0; ?>
 										<tbody>
 										@foreach($earning_salary_types as $earning_salary_type)
 										<tr>
@@ -127,6 +127,13 @@
 										</tr>
 										<?php $total_earning += array_key_exists($earning_salary_type->id, $payroll) ? ($payroll[$earning_salary_type->id]) : 0; ?>
 										@endforeach
+										@if($contract->overtime_hourly_rate)
+										<tr>
+											<td style="width:60%;">{!! trans('messages.overtime') !!}</td>
+											<td style="text-align:right;width:40%;">{!! currency($payroll_slip->overtime) !!}</td>
+										</tr>
+										<?php $total_earning += $payroll_slip->overtime; ?>
+										@endif
 										</tbody>
 									</table>
 								</td>
@@ -138,7 +145,6 @@
 											<td align="right">{!! trans('messages.amount') !!} </td>
 										</tr>
 										</thead>
-										<?php $total_deduction = 0; ?>
 										<tbody>
 										@foreach($deduction_salary_types as $deduction_salary_type)
 										<tr>
@@ -147,6 +153,20 @@
 										</tr>
 										<?php $total_deduction += array_key_exists($deduction_salary_type->id, $payroll) ? ($payroll[$deduction_salary_type->id]) : 0; ?>
 										@endforeach
+										@if($contract->late_hourly_rate)
+										<tr>
+											<td style="width:60%;">{!! trans('messages.late') !!}</td>
+											<td style="text-align:right;width:40%;">{!! currency($payroll_slip->late) !!}</td>
+										</tr>
+										<?php $total_deduction += $payroll_slip->late; ?>
+										@endif
+										@if($contract->early_leaving_hourly_rate)
+										<tr>
+											<td style="width:60%;">{!! trans('messages.early_leaving') !!}</td>
+											<td style="text-align:right;width:40%;">{!! currency($payroll_slip->early_leaving) !!}</td>
+										</tr>
+										<?php $total_deduction += $payroll_slip->early_leaving; ?>
+										@endif
 										</tbody>
 									</table>
 								</td>
@@ -173,9 +193,16 @@
 									</table>
 								</td>
 							</tr>
+							@else
+							<tr>
+								<?php $total_earning = $payroll_slip->hourly; ?>
+								<th>{!! trans('messages.hourly').' '.trans('messages.salary') !!}</th>
+								<th colspan="3" style="text-align:right;">{!! currency($total_earning) !!}</th>
+							</tr>
+							@endif
 							<tr>
 								<th>{!! trans('messages.net_salary') !!} </th>
-								<th colspan="3">{!! currency($total_earning-$total_deduction)." (".ucwords(App\Classes\Helper::inWords($total_earning-$total_deduction)).")" !!} </th>
+								<th colspan="3">{!! currency($total_earning-$total_deduction)." (".ucwords(App\Classes\Helper::inWords(round(($total_earning-$total_deduction),config('config.currency_decimal')))).")" !!} </th>
 							</tr>
 						</table>
 						<p class="pull-right" style="margin-top:20px;margin-right:10px;">{!! trans('messages.authorised_signatory') !!}</p>

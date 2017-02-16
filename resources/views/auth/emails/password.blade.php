@@ -44,7 +44,7 @@
 												</td>
 											</tr>
 										</table>
-									<p style="font-size:12px;">For any kind of support, don't hesitate to write us at care@xostr.com</p>
+									<p style="font-size:12px;">For any kind of support, don't hesitate to write us at support@wmlab.in</p>
 
 									</td>
 								</tr>

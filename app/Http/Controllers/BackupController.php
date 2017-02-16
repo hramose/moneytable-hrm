@@ -63,7 +63,7 @@ Class BackupController extends Controller{
         File::move($filename, config('constants.upload_path.backup').$filename);
         $backup = \App\Backup::create(['file' => $filename]);
 
-		$this->logActivity(['module' => 'backup','unique_id' => $backup->id,'activity' => 'activity_backup_generated']);
+		$this->logActivity(['module' => 'backup','unique_id' => $backup->id,'activity' => 'activity_generated']);
         $response = ['message' => trans('messages.backup').' '.trans('messages.generated'), 'status' => 'success']; 
         return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	}
@@ -72,7 +72,7 @@ Class BackupController extends Controller{
 		$file = config('constants.upload_path.backup').$backup->file;
 
         if(!config('code.mode'))
-            return response()->download('uploads/logo/logo.png');
+			return redirect()->back()->withErrors(trans('messages.disable_message'));
 
 		if(File::exists($file))
 			return response()->download($file);

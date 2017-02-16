@@ -25,7 +25,7 @@ Class RoleController extends Controller{
 		$data = '';
 		foreach($roles as $role){
 			$data .= '<tr>
-				<td>'.Helper::toWord($role->name).' '.(($role->is_hidden) ? '<span class="label label-danger">'.trans('messages.default').'</span>' : '').'</td>
+				<td>'.Helper::toWord($role->name).' '.(($role->is_hidden) ? '<span class="label label-danger">'.trans('messages.default').'</span>' : '').(($role->is_default) ? '<span class="label label-warning">'.trans('messages.user').' '.trans('messages.default').'</span>' : '').'</td>
 				<td>
 					<div class="btn-group btn-group-xs">
 					<a href="#" data-href="/role/'.$role->id.'/edit" class="btn btn-xs btn-default" data-toggle="modal" data-target="#myModal"> <i class="fa fa-edit" data-toggle="tooltip" title="'.trans('messages.edit').'"></i></a>'.
@@ -50,6 +50,12 @@ Class RoleController extends Controller{
 		if(\App\Setup::whereModule('role')->whereCompleted(0)->first())
         	\App\Setup::whereModule('role')->whereCompleted(0)->update(['completed' => 1]);
 
+        if($request->has('is_default')){
+        	\App\Role::whereNotNull('id')->update(['is_default' => 0]);
+        	$role->is_default = 1;
+        	$role->save();
+        }
+
         if($request->has('ajax_submit')){
         	$new_data = array('value' => $role->name,'id' => $role->id,'field' => 'role_id');
         	$data = $this->lists();
@@ -67,6 +73,12 @@ Class RoleController extends Controller{
 
 		$role->name = $request->input('name');
 		$role->save();
+
+        if($request->has('is_default')){
+        	\App\Role::whereNotNull('id')->update(['is_default' => 0]);
+        	$role->is_default = 1;
+        	$role->save();
+        }
 
 		$this->logActivity(['module' => 'role','unique_id' => $role->id,'activity' => 'activity_updated']);
 

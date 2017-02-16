@@ -100,6 +100,47 @@
 			@endif
 
 			<div class="col-sm-12">
+				<div class="box-info">
+					<h2><strong>{!! trans('messages.filter') !!}</strong></h2>
+					{!! Form::open(['route' => 'clock.shift','role' => 'form','class'=>'','id' => 'employee_filter_form','data-form-table' => 'employee_table','data-no-form-clear' => 1]) !!}
+					<div class="row">
+						<div class="col-md-4">
+						  	<div class="form-group">
+								<label for="to_date">{!! trans('messages.role') !!}</label>
+								{!! Form::select('role_id', [null => trans('messages.select_one')] + $roles,'',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						  	</div>
+						</div>
+						<div class="col-md-4">
+						  	<div class="form-group">
+								<label for="to_date">{!! trans('messages.designation') !!}</label>
+								{!! Form::select('designation_id', [null => trans('messages.select_one')] + $designations,'',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						  	</div>
+						</div>
+						<div class="col-md-4">
+						  	<div class="form-group">
+								<label for="to_date">{!! trans('messages.location') !!}</label>
+								{!! Form::select('location_id', [null => trans('messages.select_one')] + $locations,'',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						  	</div>
+						</div>
+						<div class="col-md-4">
+						  	<div class="form-group">
+								<label for="to_date">{!! trans('messages.status') !!}</label>
+								{!! Form::select('status', [null => trans('messages.select_one'),
+								'active' => 'Active',
+								'in-active' => 'In-active',
+								'pending_activation' => 'Pending Activation',
+								'pending_approval' => 'Pending Approval',
+								'banned' => 'Banned'],'',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+						  	</div>
+						</div>
+					</div>
+					<div class="form-group">
+					<button type="submit" class="btn btn-default btn-success pull-right">{!! trans('messages.get') !!}</button>
+					</div>
+					{!! Form::close() !!}
+				</div>
+			</div>
+			<div class="col-sm-12">
 				<div class="box-info full">
 					<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.employee') !!}
 						<div class="additional-btn">
@@ -135,6 +176,12 @@
 				<div class="box-info">
 					<h2><strong>{!! trans('messages.employee') !!}</strong> {!! trans('messages.statistics') !!} (Role Wise)</h2>
 					<div id="role_wise_user_graph"></div>
+				</div>
+			</div>
+			<div class="col-sm-6">
+				<div class="box-info">
+					<h2><strong>{!! trans('messages.employee') !!}</strong> {!! trans('messages.statistics') !!} (Location Wise)</h2>
+					<div id="location_wise_user_graph"></div>
 				</div>
 			</div>
 		</div>

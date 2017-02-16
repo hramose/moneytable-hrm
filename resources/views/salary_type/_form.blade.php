@@ -7,4 +7,9 @@
 			    {!! Form::label('head',trans('messages.salary_head'),[])!!}
 				{!! Form::input('text','head',isset($salary_type->head) ? $salary_type->head : '',['class'=>'form-control','placeholder'=>trans('messages.salary_head')])!!}
 			  </div>
+			<div class="checkbox">
+				<label>
+					{!! Form::checkbox('is_fixed', 1,(isset($salary_type) && $salary_type->is_fixed) ? 'checked' : '') !!} {!! trans('messages.fixed') !!}
+				</label>
+			</div>
 			  	{!! Form::submit(isset($buttonText) ? $buttonText : trans('messages.save'),['class' => 'btn btn-primary']) !!}

@@ -24,8 +24,8 @@ class UserShiftRequest extends Request
     public function rules()
     {
         return [
-            'from_date' => 'required|date|before_equal:to_date',
-            'to_date' => 'required|date',
+            'from_date' => 'required|date',
+            'to_date' => 'date|after_equal:from_date',
             'office_shift_id' => 'required'
         ];
     }

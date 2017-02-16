@@ -17,6 +17,7 @@ return [
         'logo' => 'uploads/logo/',
         'attachments' => 'uploads/attachments/',
         'profile_image' => 'uploads/profile_image/',
+        'attendance' => 'uploads/attendance/',
         'backup' => 'uploads/backup/',
     ],
     'system_default' => [
@@ -35,7 +36,18 @@ return [
         'textarea_limit' => '300',
         'notification_position' => 'toast-bottom-right',
         'installation_path' => 1,
-        'celebration_days' => 30
+        'celebration_days' => 30,
+        'multilingual' => 1,
+        'leave_approval_level' => 'single',
+        'expense_approval_level' => 'single',
+        'auto_lock_daily_report' => 1,
+        'payroll_days' => 'from_date',
+        'subordinate' => 0,
+        'enable_future_attendance' => 0,
+        'auto_lock_attendance_days' => 2,
+        'enable_registration' => 0,
+        'sub_task_rating' => 0,
+        'login_with' => 'username'
     ],
     'mail_default' => [
         'driver' => 'log',

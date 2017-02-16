@@ -95,7 +95,7 @@ Class UserLeaveController extends Controller{
             $user_leave->leave_count = $leave;
             $user_leave->save();
         }
-        $this->logActivity(['module' => 'leave','activity' => 'activity_updated','secondary_id' => $employee->id]);
+        $this->logActivity(['module' => 'user_leave','activity' => 'activity_added','secondary_id' => $employee->id]);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.employee').' '.trans('messages.leave').' '.trans('messages.added'), 'status' => 'success']; 
@@ -175,7 +175,7 @@ Class UserLeaveController extends Controller{
             $user_leave->contract_id = $id;
             $user_leave->save();
         }
-        $this->logActivity(['module' => 'leave','activity' => 'activity_updated','secondary_id' => $contract->User->id]);
+        $this->logActivity(['module' => 'user_leave','activity' => 'activity_updated','secondary_id' => $contract->User->id]);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.employee').' '.trans('messages.leave').' '.trans('messages.updated'), 'status' => 'success']; 
@@ -226,7 +226,7 @@ Class UserLeaveController extends Controller{
                 return redirect()->back()->withErrors(trans('messages.employee_already_used_leave'));
             }
 
-        $this->logActivity(['module' => 'leave','activity' => 'activity_deleted','secondary_id' => $contract->User->id]);
+        $this->logActivity(['module' => 'user_leave','activity' => 'activity_deleted','secondary_id' => $contract->User->id]);
         UserLeave::whereContractId($id)->delete();
 
         if($request->has('ajax_submit')){

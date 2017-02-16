@@ -8,6 +8,7 @@ return array(
 	'payroll',
 	'announcement',
 	'award',
+	'daily_report',
 	'expense',
 	'task',
 	'ticket',

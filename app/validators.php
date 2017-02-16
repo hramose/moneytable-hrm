@@ -17,3 +17,10 @@ Validator::extend(
         return strtotime(Request::input($parameters[0])) >= strtotime($value);
     }
 );
+
+Validator::extend(
+    'after_equal',
+    function ($attribute, $value, $parameters) {
+        return strtotime(Request::input($parameters[0])) <= strtotime($value);
+    }
+);

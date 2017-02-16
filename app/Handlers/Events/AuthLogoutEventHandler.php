@@ -36,6 +36,6 @@ class AuthLogoutEventHandler{
             );
             Helper::callCurl($url,$postData);
         }
-        $this->logActivity(['module' => 'authentication','activity' => 'activity_logged_out']);
+        $this->logActivity(['module' => 'logout','activity' => 'activity_logged_out']);
     }
 }

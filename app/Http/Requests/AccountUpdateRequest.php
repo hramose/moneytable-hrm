@@ -25,7 +25,6 @@ class AccountUpdateRequest extends Request
         return [
             'hostname' => 'required',
             'mysql_username' => 'required',
-            'mysql_password' => 'required',
             'mysql_database' => 'required',
             'purchase_code' => 'required',
         ];

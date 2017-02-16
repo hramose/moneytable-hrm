@@ -87,7 +87,7 @@ class AuthController extends Controller
             $designations = Designation::whereIn('id',$childs)->get()->pluck('full_designation','id')->all();
         }
 
-        $roles = Role::whereIsHidden(0)->get()->pluck('name','id')->all();
+        $roles = Role::where('is_hidden','!=','1')->get()->pluck('name','id')->all();
 
         $menu = ['employee'];
 
@@ -104,8 +104,28 @@ class AuthController extends Controller
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
         }
 
+        if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
+        }
+
+        if($request->has('send_welcome_email')){
+            $template = \App\Template::whereCategory('welcome_email')->first();
+            if(!$template){
+                if($request->has('ajax_submit')){
+                    $response = ['message' => trans('messages.no_template_found'), 'status' => 'error']; 
+                    return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+                }
+                return redirect('/dashboard')->withErrors(trans('messages.no_template_found'));
+            }
+        }
+
         $user->fill($request->all());
         $user->password = bcrypt($request->input('password'));
+        $user->status = 'active';
         $user->save();
         $profile = new Profile;
         $profile->user()->associate($user);

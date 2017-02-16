@@ -529,7 +529,7 @@ ALTER TABLE `profile`
 -- Roles Table --
 
 alter table `roles` modify `name` varchar(255) default null;
-alter table `roles` add `is_hidden` tinyint(4) default null after `name`;
+alter table `roles` add `is_hidden` tinyint(4) NOT NULL DEFAULT '0' after `name`;
 alter table `roles` drop `display_name`;
 alter table `roles` modify `created_at` timestamp not null default CURRENT_TIMESTAMP;
 alter table `roles` modify `updated_at` timestamp default null;

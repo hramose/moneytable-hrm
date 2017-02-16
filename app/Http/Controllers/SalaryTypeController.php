@@ -24,7 +24,7 @@ Class SalaryTypeController extends Controller{
 		$data = '';
 		foreach($salary_types as $salary_type){
 			$data .= '<tr>
-				<td>'.$salary_type->head.'</td>
+				<td>'.$salary_type->head.' '.(($salary_type->is_fixed) ? '<span class="label label-danger">'.trans('messages.fixed').'</span>' : '').'</td>
 				<td>'.trans('messages.'.$salary_type->salary_type).'</td>
 				<td>
 					<div class="btn-group btn-group-xs">
@@ -43,7 +43,9 @@ Class SalaryTypeController extends Controller{
 
 	public function store(SalaryTypeRequest $request, SalaryType $salary_type){	
 
-		$salary_type->fill($request->all())->save();
+		$salary_type->fill($request->all());
+		$salary_type->is_fixed = ($request->has('is_fixed')) ? 1 : 0;
+		$salary_type->save();
 
 		$this->logActivity(['module' => 'salary_type','unique_id' => $salary_type->id,'activity' => 'activity_added']);
 
@@ -59,7 +61,9 @@ Class SalaryTypeController extends Controller{
 
 	public function update(SalaryTypeRequest $request, SalaryType $salary_type){
 
-		$salary_type->fill($request->all())->save();
+		$salary_type->fill($request->all());
+		$salary_type->is_fixed = ($request->has('is_fixed')) ? 1 : 0;
+		$salary_type->save();
 
 		$this->logActivity(['module' => 'salary_type','unique_id' => $salary_type->id,'activity' => 'activity_updated']);
 

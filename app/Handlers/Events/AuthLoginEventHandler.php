@@ -33,10 +33,9 @@ class AuthLoginEventHandler{
         \Auth::user()->last_login_now = new \DateTime;
         \Auth::user()->last_login_ip_now = \Request::getClientIp();
         \Auth::user()->save();
-        $this->logActivity(['module' => 'authentication','activity' => 'activity_logged_in']);
+        $this->logActivity(['module' => 'login','activity' => 'activity_logged_in']);
 
         if(config('config.auto_clock_authentication')){
-
             $url = url('/')."/clock/in";
             $postData = array(
                 'datetime' => date('Y-m-d H:i:s'),

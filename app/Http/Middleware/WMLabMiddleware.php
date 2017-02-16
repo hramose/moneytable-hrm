@@ -115,10 +115,9 @@ class WMLabMiddleware
         if (Auth::check()){
             $header_inbox = \App\Message::whereToUserId(Auth::user()->id)->whereIsRead(0)->get();
             
-            $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
-            $child_users = \App\User::whereIn('designation_id',$child_designations)->pluck('id')->all();
-            $header_leave = \App\Leave::whereIn('user_id',$child_users)->whereStatus('pending')->get();
-            view()->share(compact('header_inbox','header_leave'));
+            $header_leave = \App\LeaveStatusDetail::whereDesignationId(Auth::user()->designation_id)->whereStatus('pending')->get();
+            $header_expense = \App\ExpenseStatusDetail::whereDesignationId(Auth::user()->designation_id)->whereStatus('pending')->get();
+            view()->share(compact('header_inbox','header_leave','header_expense'));
         }
 
         $response = $next($request);

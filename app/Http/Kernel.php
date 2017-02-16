@@ -40,6 +40,7 @@ class Kernel extends HttpKernel
         'config_accessible' => \App\Http\Middleware\ConfigAccessible::class,
         'ajax' => \App\Http\Middleware\OnlyAjax::class,
         'xss' => \App\Http\Middleware\XSSProtection::class,
-        'feature_available' => \App\Http\Middleware\FeatureAvailable::class
+        'feature_available' => \App\Http\Middleware\FeatureAvailable::class,
+        'multilingual' => \App\Http\Middleware\Multilingual::class
     ];
 }

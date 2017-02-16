@@ -9,18 +9,14 @@ var Validate = function () {
 	                    required: true,
 	                    email: true
 	                },
-	                password: {
-	                    required: true,
-	                    minlength: 6,
-	                },
 	                username: {
 	                    required: true,
 	                    minlength: 4,
 	                },
-	                mysql_username: {
+	                password: {
 	                    required: true,
 	                },
-	                mysql_password: {
+	                mysql_username: {
 	                    required: true,
 	                },
 	                hostname: {
@@ -66,9 +62,6 @@ var Validate = function () {
 	            focusInvalid: true,
 	            rules: {
 	                mysql_username: {
-	                    required: true,
-	                },
-	                mysql_password: {
 	                    required: true,
 	                },
 	                hostname: {

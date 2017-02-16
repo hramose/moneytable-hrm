@@ -20,7 +20,7 @@ Class UserShiftController extends Controller{
 
         foreach($employee->UserShift as $user_shift){
         $data .= '<tr>
-                <td>'.showDate($user_shift->from_date).' to '.showDate($user_shift->to_date).'</td>
+                <td>'.showDate($user_shift->from_date).($user_shift->to_date ? (' to '.showDate($user_shift->to_date)) : '').'</td>
                 <td>'.$user_shift->OfficeShift->name.'</td>
                 <td>
                     <div class="btn-group btn-group-xs">
@@ -53,28 +53,52 @@ Class UserShiftController extends Controller{
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
         }
 
-        $shift = UserShift::whereUserId($id)
-            ->where(function ($query) use($request) { $query->where(function ($query) use($request){
-                $query->where('from_date','<=',$request->input('from_date'))
-                ->where('to_date','>=',$request->input('from_date'));
-                })->orWhere(function ($query) use($request) {
-                    $query->where('from_date','<=',$request->input('to_date'))
-                        ->where('to_date','>=',$request->input('to_date'));
-                });})->count();
+        if(UserShift::whereUserId($id)->whereNull('to_date')->count()){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.already_undefined_end_date'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/employee/'.$id.'#office_shift')->withErrors(trans('messages.already_undefined_end_date'));
+        }
+
+        $previous_shift = UserShift::whereUserId($id)->first();
+
+        if($previous_shift && $request->input('from_date') <= $previous_shift->from_date){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.back_date_entry'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/employee/'.$id.'#office_shift')->withErrors(trans('messages.back_date_entry'));
+        }
+
+        if($request->has('to_date'))
+            $shift = UserShift::whereUserId($id)
+                ->where(function ($query) use($request) { $query->where(function ($query) use($request){
+                    $query->where('from_date','<=',$request->input('from_date'))
+                    ->where('to_date','>=',$request->input('from_date'));
+                    })->orWhere(function ($query) use($request) {
+                        $query->where('from_date','<=',$request->input('to_date'))
+                            ->where('to_date','>=',$request->input('to_date'));
+                    });})->count();
+        else
+            $shift = UserShift::whereUserId($id)->where('from_date','<=',$request->input('from_date'))
+                        ->where('to_date','>=',$request->input('from_date'))->count();
 
         if($shift){
             if($request->has('ajax_submit')){
-                $response = ['message' => trans('messages.shift_already_defined'), 'status' => 'error']; 
+                $response = ['message' => trans('messages.entry_already_defined'), 'status' => 'error']; 
                 return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
             }
-            return redirect('/employee/'.$id.'#office_shift')->withErrors(trans('messages.shift_already_defined'));
+            return redirect('/employee/'.$id.'#office_shift')->withErrors(trans('messages.entry_already_defined'));
         }
 
         $user_shift = new UserShift;
         $data = $request->all();
         $data['user_id'] = $id;
+        $data['to_date'] = ($request->has('to_date')) ? $request->input('to_date') : null;
         $user_shift->fill($data)->save();
-        $this->logActivity(['module' => 'office_shift','activity' => 'activity_added','secondary_id' => $employee->id]);
+
+        $this->logActivity(['module' => 'user_shift','activity' => 'activity_added','secondary_id' => $employee->id]);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.shift').' '.trans('messages.added'), 'status' => 'success']; 
@@ -98,26 +122,50 @@ Class UserShiftController extends Controller{
 
     public function update(UserShiftRequest $request, UserShift $user_shift){
 
-        $shift = UserShift::whereUserId($user_shift->user_id)
-            ->where('id','!=',$user_shift->id)
-            ->where(function ($query) use($request) { $query->where(function ($query) use($request){
-                $query->where('from_date','<=',$request->input('from_date'))
-                ->where('to_date','>=',$request->input('from_date'));
-                })->orWhere(function ($query) use($request) {
-                    $query->where('from_date','<=',$request->input('to_date'))
-                        ->where('to_date','>=',$request->input('to_date'));
-                });})->count();
+        if(UserShift::whereUserId($user_shift->user_id)->where('id','!=',$user_shift->id)->whereNull('to_date')->count()){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.already_undefined_end_date'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/employee/'.$user_shift->user_id.'#office_shift')->withErrors(trans('messages.already_undefined_end_date'));
+        }
+
+        $previous_shift = UserShift::whereUserId($user_shift->user_id)->where('id','!=',$user_shift->id)->first();
+
+        if($previous_shift && $request->input('from_date') <= $previous_shift->from_date){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.back_date_entry'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/employee/'.$user_shift->user_id.'#office_shift')->withErrors(trans('messages.back_date_entry'));
+        }
+
+        if($request->has('to_date'))
+            $shift = UserShift::whereUserId($user_shift->user_id)->where('id','!=',$user_shift->id)
+                ->where(function ($query) use($request) { $query->where(function ($query) use($request){
+                    $query->where('from_date','<=',$request->input('from_date'))
+                    ->where('to_date','>=',$request->input('from_date'));
+                    })->orWhere(function ($query) use($request) {
+                        $query->where('from_date','<=',$request->input('to_date'))
+                            ->where('to_date','>=',$request->input('to_date'));
+                    });})->count();
+        else
+            $shift = UserShift::whereUserId($user_shift->user_id)->where('id','!=',$user_shift->id)->where('from_date','<=',$request->input('from_date'))
+                        ->where('to_date','>=',$request->input('from_date'))->count();
 
         if($shift){
             if($request->has('ajax_submit')){
-                $response = ['message' => trans('messages.shift_already_defined'), 'status' => 'error']; 
+                $response = ['message' => trans('messages.entry_already_defined'), 'status' => 'error']; 
                 return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
             }
-            return redirect('/employee/'.$user_shift->user_id.'#office_shift')->withErrors(trans('messages.shift_already_defined'));
+            return redirect('/employee/'.$user_shift->user_id.'#office_shift')->withErrors(trans('messages.entry_already_defined'));
         }
 
-        $user_shift->fill($request->all())->save();
-        $this->logActivity(['module' => 'office_shift','activity' => 'activity_updated','secondary_id' => $user_shift->user_id]);
+        $data = $request->all();
+        $data['to_date'] = ($request->has('to_date')) ? $request->input('to_date') : null;
+        $user_shift->fill($data)->save();
+
+        $this->logActivity(['module' => 'user_shift','activity' => 'activity_updated','secondary_id' => $user_shift->user_id]);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.shift').' '.trans('messages.updated'), 'status' => 'success']; 
@@ -135,7 +183,7 @@ Class UserShiftController extends Controller{
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
         }
 
-        $this->logActivity(['module' => 'office_shift','activity' => 'activity_deleted','secondary_id' => $user_shift->user_id]);
+        $this->logActivity(['module' => 'user_shift','activity' => 'activity_deleted','secondary_id' => $user_shift->user_id]);
         $user_shift->delete();
         
         if($request->has('ajax_submit')){

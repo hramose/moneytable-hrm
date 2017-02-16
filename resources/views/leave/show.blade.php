@@ -29,39 +29,72 @@
 					<div class="the-notes info">{!! $leave->remarks !!}</div>
 				</div>
 			</div>
-			<div class="col-sm-4">
-				<div class="box-info">
-					@if(Entrust::can('update_leave_status') && ($leave->user_id != Auth::user()->id || defaultRole()))
-					 {!! Form::model($leave,['method' => 'POST','route' => ['leave.update-status',$leave->id] ,'class' => 'leave-status-form','id' => 'leave-status-form','data-no-form-clear'=>1,'data-leave-statistics' => 1]) !!}
-					<h2><strong>{!! trans('messages.update') !!}</strong> {!! trans('messages.status') !!}</h2>
-					  <div class="form-group">
-					    {!! Form::label('status',trans('messages.leave').' '.trans('messages.status'),[])!!}
-						{!! Form::select('status', $status, $leave->status,['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one'),'id' => 'status'])!!}
-					  </div>
-					  <div class="form-group show-hide-approved-date">
-					    {!! Form::label('approved_date',trans('messages.date'),[])!!}
-						{!! Form::input('text','approved_date',isset($leave->approved_date) ? $leave->approved_date : '',['class'=>'form-control mdatepicker','placeholder'=>trans('messages.date'),'readonly' => 'true'])!!}
-					  </div>
-					  <div class="form-group">
-					    {!! Form::label('admin_remarks',trans('messages.remarks'),[])!!}
-					    {!! Form::textarea('admin_remarks',isset($leave->admin_remarks) ? $leave->admin_remarks : '',['size' => '30x3', 'class' => 'form-control', 'placeholder' => trans('messages.remarks'),"data-show-counter" => 1,"data-limit" => config('config.textarea_limit'),'data-autoresize' => 1])!!}
-					    <span class="countdown"></span>
-					  </div>
-					  {!! Form::submit(trans('messages.save'),['class' => 'btn btn-primary']) !!}
+			<div class="col-sm-8">
+				@if(Entrust::can('update_leave_status') && $leave_status_enabled)
+					<div class="box-info">
+					{!! Form::model($leave,['method' => 'POST','route' => ['leave.update-status',$leave->id] ,'class' => 'leave-status-form','id' => 'leave-status-form','data-no-form-clear'=>1,'data-leave-statistics' => 1,'data-submit' => 'noAjax']) !!}
+						<h2><strong>{!! trans('messages.update') !!}</strong> {!! trans('messages.status') !!}</h2>
+						  <div class="form-group">
+						    {!! Form::label('status',trans('messages.leave').' '.trans('messages.status'),[])!!}
+							{!! Form::select('status', $status, isset($leave_status_detail->status) ?  $leave_status_detail->status : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one'),'id' => 'status'])!!}
+						  </div>
+						  <div class="form-group show-hide-approved-date">
+						    {!! Form::label('approved_date',trans('messages.date'),[])!!}
+							{!! Form::input('text','approved_date',isset($leave_status_detail->approved_date) ? $leave_status_detail->approved_date : '',['class'=>'form-control mdatepicker','placeholder'=>trans('messages.date'),'readonly' => 'true'])!!}
+						  </div>
+						  <div class="form-group">
+						    {!! Form::label('admin_remarks',trans('messages.remarks'),[])!!}
+						    {!! Form::textarea('admin_remarks',isset($leave_status_detail->remarks) ? $leave_status_detail->remarks : '',['size' => '30x3', 'class' => 'form-control', 'placeholder' => trans('messages.remarks'),"data-show-counter" => 1,"data-limit" => config('config.textarea_limit'),'data-autoresize' => 1])!!}
+						    <span class="countdown"></span>
+						  </div>
+						  {!! Form::submit(trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
 					{!! Form::close() !!}
-					@else
+					</div>
+				@endif
+				<div class="box-info full">
 					<h2><strong>{!! trans('messages.leave') !!}</strong> {!! trans('messages.status') !!}</h2>
-						@if($leave->status == 'pending')
-							<span class="label label-info btn-lg">{!! trans('messages.pending') !!}</span>
-						@elseif($leave->status == 'approved')
-							<span class="label label-success btn-lg">{!! trans('messages.approved') !!}</span>
-						@else
-							<span class="label label-danger btn-lg">{!! trans('messages.rejected') !!}</span>
-						@endif
-						<div class="the-success info">{!! $leave->admin_remarks !!}</div>
-					@endif
+					<div class="table-responsive">
+						<table class="table table-stripped table-hover">
+							<thead>
+								<tr>
+									<th>Designation</th>
+									<th>Status</th>
+									<th style="min-width:150px;">Approve Date</th>
+									<th>Remarks</th>
+									<th>Date Updated</th>
+								</tr>
+							</thead>
+							<tbody>
+							@foreach($leave->LeaveStatusDetail as $leave_status_detail)
+								<tr>
+									<td>{{$leave_status_detail->Designation->full_designation}}</td>
+									<td>
+										@if($leave_status_detail->status == 'pending')
+											<span class="label label-info">{{trans('messages.pending')}}</span>
+										@elseif($leave_status_detail->status == 'rejected')
+											<span class="label label-danger">{{trans('messages.rejected')}}</span>
+										@elseif($leave_status_detail->status == 'approved')
+											<span class="label label-success">{{trans('messages.approved')}}</span>
+										@endif
+									</td>
+									<td>
+										@if($leave_status_detail->approved_date)	
+											@foreach(explode(',',$leave_status_detail->approved_date) as $approved_date)			
+											{{showDate($approved_date)}} <br />
+											@endforeach
+										@endif
+									</td>
+									<td>{{$leave_status_detail->remarks}}</td>
+									<td>{{($leave_status_detail->status != null && $leave_status_detail->status != 'pending') ? showDateTime($leave_status_detail->updated_at) : ''}}</td>
+								</tr>
+							@endforeach	
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
+		</div>
+		<div class="row">
 			<div class="col-sm-4">
 				<div class="box-info">
 					<h2><strong>{{ trans('messages.leave') }}</strong> {{ trans('messages.statistics') }}</h2>
@@ -69,9 +102,7 @@
 					</div>
 				</div>
 			</div>
-		</div>
-		<div class="row">
-			<div class="col-md-12">
+			<div class="col-md-8">
 				<div class="box-info full">
 					<h2><strong>{!! trans('messages.other') !!}</strong> {!! trans('messages.leave').' "'.$leave->User->full_name_with_designation.'"' !!}</h2>
 

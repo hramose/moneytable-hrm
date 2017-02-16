@@ -1,6 +1,6 @@
 <?php return array (
-  'hostname' => '',
-  'database' => '',
-  'username' => '',
-  'password' => '',
+  'hostname' => '127.0.0.1',
+  'database' => 'moneytable_hrm',
+  'username' => 'root',
+  'password' => 'root',
 );

@@ -19,6 +19,8 @@
 						  <li><a href="#contact" data-toggle="tab"><i class="fa fa-phone"></i> {!! trans('messages.contact') !!}</a></li>
 						  <li><a href="#social-networking" data-toggle="tab"><i class="fa fa-users"></i> {!! trans('messages.social_networking') !!}</a></li>
 						  <li><a href="#document" data-toggle="tab"><i class="fa fa-file"></i> {!! trans('messages.document') !!}</a></li>
+						  <li><a href="#qualification" data-toggle="tab"><i class="fa fa-book"></i> {!! trans('messages.qualification') !!}</a></li>
+						  <li><a href="#work-experience" data-toggle="tab"><i class="fa fa-hourglass-2"></i> {!! trans('messages.work_experience') !!}</a></li>
 						  <li><a href="#bank-account" data-toggle="tab"><i class="fa fa-laptop"></i> {!! trans('messages.account') !!}</a></li>
 						  <li><a href="#contract" data-toggle="tab"><i class="fa fa-pencil"></i> {!! trans('messages.contract') !!}</a></li>
 						  @if(count($employee->Contract))
@@ -26,6 +28,7 @@
 						  <li><a href="#leave" data-toggle="tab"><i class="fa fa-coffee"></i> {!! trans('messages.leave') !!}</a></li>
 						  @endif
 						  <li><a href="#office_shift" data-toggle="tab"><i class="fa fa-clock-o"></i> {!! trans('messages.shift') !!}</a></li>
+						  <li><a href="#location" data-toggle="tab"><i class="fa fa-arrows-alt"></i> {!! trans('messages.location') !!}</a></li>
 						  <li><a href="#template" data-toggle="tab"><i class="fa fa-envelope"></i> {!! trans('messages.email').' '.trans('messages.template') !!}</a></li>
 						  @if(Entrust::can('reset_employee_password') && $employee->id != Auth::user()->id)
 						  <li><a href="#change_password" data-toggle="tab"><i class="fa fa-key"></i> {!! trans('messages.change_password') !!}</a></li>
@@ -69,24 +72,16 @@
 									@endif
 								  </div>
 								  <div class="row">
-								  	<div class="col-sm-6">
-									  <div class="form-group">
-									    {!! Form::label('gender',trans('messages.gender'),['class' => 'control-label'])!!}
-										{!! Form::select('gender', [null=>trans('messages.select_one')] + $gender,($employee->Profile->gender) ? : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
-									  </div>
-									</div>
-									<div class="col-sm-6">	
-									  <div class="form-group">
-									    {!! Form::label('marital_status',trans('messages.marital_status'),['class' => 'control-label'])!!}
-										{!! Form::select('marital_status', [null=>trans('messages.select_one')] + $marital_status,($employee->Profile->marital_status) ? : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
-									  </div>	
-									</div>
-								   </div>
-								  <div class="row">
 								  	<div class="col-sm-4">
 				    				  	<div class="form-group">
 										    {!! Form::label('employee_code',trans('messages.employee_code'))!!}
 											{!! Form::input('text','employee_code',isset($employee->Profile->employee_code) ? $employee->Profile->employee_code : '',['class'=>'form-control','placeholder'=>trans('messages.employee_code')])!!}
+										</div>	
+								  	</div>
+								  	<div class="col-sm-4">
+				    				  	<div class="form-group">
+										    {!! Form::label('username',trans('messages.username'))!!}
+											{!! Form::input('text','username',isset($employee->username) ? $employee->username : '',['class'=>'form-control','placeholder'=>trans('messages.username')])!!}
 										</div>	
 								  	</div>
 								  	<div class="col-sm-4">
@@ -95,6 +90,20 @@
 										{!! Form::input('text','email',isset($employee->email) ? $employee->email : '',['class'=>'form-control','placeholder'=>trans('messages.email')])!!}
 									  </div>
 								  	</div>
+								  </div>
+								  <div class="row">
+								  	<div class="col-sm-4">
+									  <div class="form-group">
+									    {!! Form::label('gender',trans('messages.gender'),['class' => 'control-label'])!!}
+										{!! Form::select('gender', [null=>trans('messages.select_one')] + $gender,($employee->Profile->gender) ? : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+									  </div>
+									</div>
+									<div class="col-sm-4">	
+									  <div class="form-group">
+									    {!! Form::label('marital_status',trans('messages.marital_status'),['class' => 'control-label'])!!}
+										{!! Form::select('marital_status', [null=>trans('messages.select_one')] + $marital_status,($employee->Profile->marital_status) ? : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+									  </div>	
+									</div>
 								  	<div class="col-sm-4">
 				    				  	<div class="form-group">
 										    {!! Form::label('contact_number',trans('messages.contact_number'))!!}
@@ -138,7 +147,7 @@
 
 								<h2>{!! trans('messages.list_all').' '.trans('messages.contact') !!}</h2>
 								<div class="table-responsive">
-									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load"  id="employee-contact-table" data-source="/contact/lists" data-extra="&employee_id={{$employee->id}}">
+									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load"  id="employee-contact-table" data-source="/contact/lists" data-extra="&employee_id={{$employee->id}}&show_option=1">
 										<thead>
 											<tr>
 												<th>{!! trans('messages.name') !!}</th>
@@ -194,7 +203,7 @@
 								<div class="clear"></div>
 								<h2>{!! trans('messages.list_all').' '.trans('messages.bank_account') !!}</h2>
 								<div class="table-responsive">
-									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load" id="bank-account-table" data-source="/bank-account/lists" data-extra="&employee_id={{$employee->id}}">
+									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load" id="bank-account-table" data-source="/bank-account/lists" data-extra="&employee_id={{$employee->id}}&show_option=1">
 										<thead>
 											<tr>
 												<th>{!! trans('messages.account_name') !!}</th>
@@ -202,6 +211,61 @@
 												<th>{!! trans('messages.bank_name') !!}</th>
 												<th>{!! trans('messages.bank_code') !!}</th>
 												<th>{!! trans('messages.branch') !!}</th>
+												<th data-sortable="false" >{!! trans('messages.option') !!}</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div>
+						    </div>
+						  </div>
+						  <div class="tab-pane animated fadeInRight" id="qualification">
+						    <div class="user-profile-content-wm">
+							<h2>{!! trans('messages.add_new').' '.trans('messages.qualification') !!}</h2>
+					 			{!! Form::model($employee,['method' => 'POST','route' => ['qualification.store',$employee->id] ,'class' => 'qualification-form','id' => 'qualification-form','data-table-alter' => 'qualification-table']) !!}
+			    				  	@include('employee._qualification_form')
+								{!! Form::close() !!}
+
+								<div class="clear"></div>
+								<h2>{!! trans('messages.list_all').' '.trans('messages.qualification') !!}</h2>
+								<div class="table-responsive">
+									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load" id="qualification-table" data-source="/qualification/lists" data-extra="&employee_id={{$employee->id}}&show_option=1">
+										<thead>
+											<tr>
+												<th>{!! trans('messages.institute').' '.trans('messages.name') !!}</th>
+												<th>{!! trans('messages.from_year') !!}</th>
+												<th>{!! trans('messages.to_year') !!}</th>
+												<th>{!! trans('messages.education_level') !!}</th>
+												<th>{!! trans('messages.language') !!}</th>
+												<th>{!! trans('messages.skill') !!}</th>
+												<th data-sortable="false" >{!! trans('messages.option') !!}</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div>
+						    </div>
+						  </div>
+						  <div class="tab-pane animated fadeInRight" id="work-experience">
+						    <div class="user-profile-content-wm">
+							<h2>{!! trans('messages.add_new').' '.trans('messages.work_experience') !!}</h2>
+					 			{!! Form::model($employee,['method' => 'POST','route' => ['work-experience.store',$employee->id] ,'class' => 'work-experience-form','id' => 'work-experience-form','data-table-alter' => 'work-experience-table']) !!}
+			    				  	@include('employee._work_experience_form')
+								{!! Form::close() !!}
+
+								<div class="clear"></div>
+								<h2>{!! trans('messages.list_all').' '.trans('messages.work_experience') !!}</h2>
+								<div class="table-responsive">
+									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load" id="work-experience-table" data-source="/work-experience/lists" data-extra="&employee_id={{$employee->id}}&show_option=1">
+										<thead>
+											<tr>
+												<th>{!! trans('messages.company_name') !!}</th>
+												<th>{!! trans('messages.from_date') !!}</th>
+												<th>{!! trans('messages.to_date') !!}</th>
+												<th>{!! trans('messages.post') !!}</th>
+												<th>{!! trans('messages.description') !!}</th>
 												<th data-sortable="false" >{!! trans('messages.option') !!}</th>
 											</tr>
 										</thead>
@@ -250,6 +314,10 @@
 										<thead>
 											<tr>
 												<th>{{ trans('messages.contract') }}</th>
+												<th>{{ trans('messages.hourly_rate') }}</th>
+												<th>{{ trans('messages.overtime_hourly_rate') }}</th>
+												<th>{{ trans('messages.late_hourly_rate') }}</th>
+												<th>{{ trans('messages.early_leaving_hourly_rate') }}</th>
 												@foreach($earning_salary_types as $earning_salary_type)
 													<th>{{ $earning_salary_type->head }}</th>
 												@endforeach
@@ -305,6 +373,30 @@
 											<tr>
 												<th>{!! trans('messages.date') !!}</th>
 												<th>{!! trans('messages.shift') !!}</th>
+												<th data-sortable="false" >{!! trans('messages.option') !!}</th>
+											</tr>
+										</thead>
+										<tbody>
+										</tbody>
+									</table>
+								</div>
+						    </div>
+						  </div>
+						  <div class="tab-pane animated fadeInRight" id="location">
+						    <div class="user-profile-content-wm">
+								<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.location') !!}</h2>
+								{!! Form::model($employee,['method' => 'POST','route' => ['user-location.store',$employee->id] ,'class' => 'user-location-form','id' => 'user-location-form','data-table-alter' => 'user-location-table']) !!}
+									@include('employee._user_location_form')
+								{!! Form::close() !!}
+
+								<br /><br />
+								<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.location') !!}</h2>
+								<div class="table-responsive">
+									<table data-sortable class="table table-hover table-striped table-bordered table-ajax-load"  id="user-location-table" data-source="/user-location/lists" data-extra="&employee_id={{$employee->id}}">
+										<thead>
+											<tr>
+												<th>{!! trans('messages.date') !!}</th>
+												<th>{!! trans('messages.location') !!}</th>
 												<th data-sortable="false" >{!! trans('messages.option') !!}</th>
 											</tr>
 										</thead>
@@ -407,7 +499,7 @@
 								<div class="clear"></div>
 								<h2>{!! trans('messages.list_all').' '.trans('messages.document') !!}</h2>
 								<div class="table-responsive">
-									<table data-sortable  class="table table-hover table-striped table-bordered table-ajax-load"  id="document-table" data-source="/document/lists" data-extra="&employee_id={{$employee->id}}">
+									<table data-sortable  class="table table-hover table-striped table-bordered table-ajax-load"  id="document-table" data-source="/document/lists" data-extra="&employee_id={{$employee->id}}&show_option=1">
 										<thead>
 											<tr>
 												<th>{!! trans('messages.document_type') !!}</th>

@@ -12,28 +12,6 @@ class ProfileController extends Controller
     
   }
 
-   public function changePassword(){
-        return view('auth.change_password');
-   }
-
-   public function doChangePassword(Request $request)
-   {
-		$this->validate($request, [
-            'old_password' => 'required|valid_password',
-            'new_password' => 'required|confirmed|different:old_password|min:4',
-            'new_password_confirmation' => 'required|different:old_password|same:new_password'
-        ]);
-        $credentials = $request->only(
-                'new_password', 'new_password_confirmation'
-        );
-
-        $user = Auth::user();
-        
-        $user->password = bcrypt($credentials['new_password']);
-        $user->save();
-        return redirect('change_password')->withSuccess('Password has been changed.');    
-    }
-
     public function getLeave(Request $request){
       $user_id = $request->input('user_id') ? : Auth::user()->id;
       $contract = Helper::getContract($user_id);
@@ -41,8 +19,37 @@ class ProfileController extends Controller
       $raw_data = array();
       $data = '';
 
+      $user_leaves = \App\Leave::whereUserId($user_id)->get();
+      $leave_applied = $user_leaves->count();
+      $leave_approved = $user_leaves->whereLoose('status','approved')->count();
+      $leave_rejected = $user_leaves->whereLoose('status','rejected')->count();
+      $leave_pending = $user_leaves->whereLoose('status','pending')->count();
+
       if(!$contract)
         return '<div class="alert alert-danger"><i class="fa fa-times icon"></i> '.trans('messages.no_data_found').'</div>';
+
+      $data .= '<div class="table-responsive">
+                  <table class="table table-stripped table-bordered table-hover show-table">
+                    <tbody>
+                      <tr>
+                        <th><i class="fa fa-bell info"></i> '.trans('messages.leave').' '.trans('messages.applied').'</th>
+                        <td><span class="badge badge-info">'.$leave_applied.'</span></td>
+                      </tr>
+                      <tr>
+                        <th><i class="fa fa-thumbs-up success"></i> '.trans('messages.leave').' '.trans('messages.approved').'</th>
+                        <td><span class="badge badge-success">'.$leave_approved.'</span></td>
+                      </tr>
+                      <tr>
+                        <th><i class="fa fa-thumbs-down danger"></i> '.trans('messages.leave').' '.trans('messages.rejected').'</th>
+                        <td><span class="badge badge-danger">'.$leave_rejected.'</span></td>
+                      </tr>
+                      <tr>
+                        <th><i class="fa fa-hourglass warning"></i> '.trans('messages.leave').' '.trans('messages.pending').'</th>
+                        <td><span class="badge badge-warning">'.$leave_pending.'</span></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div><br />';
 
       $data .= '<p>'.trans('messages.contract_period').': <strong>'.showDate($contract->from_date).' '.trans('messages.to').' '.showDate($contract->to_date).'</strong></p>';
       foreach($leave_types as $leave_type){

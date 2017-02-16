@@ -26,7 +26,13 @@ class LeaveStatusRequest extends Request
         return [
             'status' => 'required',
             'approved_date' => 'required_if:status,approved',
-            'admin_remarks' => 'required'
+            'admin_remarks' => 'required_if:status,approved,rejected'
+        ];
+    }
+
+    public function attributes(){
+        return [
+            'admin_remarks' => 'remarks'
         ];
     }
 }

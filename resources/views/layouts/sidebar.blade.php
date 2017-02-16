@@ -15,8 +15,7 @@
 							<div class="clear"></div>
 							<span style="font-size:12px;">
 
-							<a href="/profile" style="font-size:12px;color:#fff;">{{ trans('messages.my').' '.trans('messages.profile') }}</a>
-
+							<a href="/profile" style="font-size:12px;color:#fff;">{{ trans('messages.my').' '.trans('messages.profile')}}</a>
 							@if(showDateTime(Auth::user()->last_login))
 							| {!! trans('messages.last_login') !!} <br />{!! showDateTime(Auth::user()->last_login).' '.trans('messages.from').' '.Auth::user()->last_login_ip !!}</span>
 							@endif

@@ -15,6 +15,11 @@ class Leave extends Eloquent {
 	protected $primaryKey = 'id';
 	protected $table = 'leaves';
 
+    public function leaveStatusDetail()
+    {
+        return $this->hasMany('App\LeaveStatusDetail'); 
+    }
+
     public function user()
     {
         return $this->belongsTo('App\User','user_id'); 

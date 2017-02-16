@@ -28,6 +28,34 @@ use Services_Twilio_RestException;
 			
 		}
 
+		public static function getRatingStar($rating,$only = 0){
+			$rating = round($rating * 2,0) / 2;
+			$full_star = floor($rating);
+			$half_star = $rating - $full_star;
+			$star = '<div>';
+			for($i = 1; $i <= $full_star; $i++)
+				$star .= '<i class="fa fa-lg fa-star icon rating-star" ></i>';
+
+			if($half_star)
+				$star .= '<i class="fa fa-lg fa-star-half icon rating-star" ></i>';
+			$star .= '</div>';
+
+			if(!$only)
+				return $star;
+			else
+				return ($rating) ? $rating : '';
+		}
+
+		public static function getSubTaskRating($task_id,$user_id,$only = 0){
+			$task = \App\Task::find($task_id);
+			$sub_tasks = $task->SubTask->pluck('id')->all();
+			$rating = \App\SubTaskRating::where('user_id','=',$user_id)->whereIn('sub_task_id',$sub_tasks)->avg('rating');
+			if(!$only)
+				return Helper::getRatingStar($rating);
+			else
+				return round(($rating*2),0)/2;
+		}
+
 		public static function setConfig($config_vars){
 
 	        foreach($config_vars as $config_var){
@@ -240,12 +268,30 @@ use Services_Twilio_RestException;
 			
 			$shift = \App\UserShift::whereUserId($user_id)->where('from_date','<=',$date)->where('to_date','>=',$date)->first();
 
+			if(!$shift)
+				$shift = \App\UserShift::whereUserId($user_id)->where('from_date','<=',$date)->whereNull('to_date')->orderBy('from_date','desc')->first();
+
 	        if(!$shift)
 	            $my_shift = $default_shift->OfficeShiftDetail->whereLoose('day',strtolower(date('l',strtotime($date))))->first();
 	        else
 	            $my_shift = $shift->OfficeShift->OfficeShiftDetail->whereLoose('day',strtolower(date('l',strtotime($date))))->first();
 
 	        return $my_shift;
+		}
+
+		public static function getLocation($date, $user_id = ''){
+			if($user_id == '')
+				$user_id = Auth::user()->id;
+			
+			$user_location = \App\UserLocation::whereUserId($user_id)->where('from_date','<=',$date)->where('to_date','>=',$date)->first();
+
+			if(!$user_location)
+				$user_location = \App\UserLocation::whereUserId($user_id)->where('from_date','<=',$date)->whereNull('to_date')->orderBy('from_date','desc')->first();
+
+			if($user_location)
+				return $user_location->Location->name;
+			else
+				return;
 		}
 
 		public static function createLineTreeView($array, $currentParent = 1, $currLevel = 0, $prevLevel = -1) {
@@ -266,15 +312,15 @@ use Services_Twilio_RestException;
 		}
 
 		public static function getChilds($array, $currentParent = 1, $id = 0, $currLevel = 0, $prevLevel = -1) {
-			STATIC $designation_child = array();
+			STATIC $child = array();
 			foreach ($array as $categoryId => $category) {
 			if ($currentParent == $category['parent_id']) {  
 				if ($currLevel > $prevLevel){} 
 				if ($currLevel == $prevLevel){}
 				if($id == 0)
-					$designation_child[$categoryId] = $category['name'];
+					$child[$categoryId] = $category['name'];
 				else
-					$designation_child[] = $categoryId;
+					$child[] = $categoryId;
 			    if ($currLevel > $prevLevel) { $prevLevel = $currLevel; }
 			    $currLevel++; 
 			    Helper::getChilds($array, $categoryId, $id, $currLevel, $prevLevel);
@@ -282,12 +328,31 @@ use Services_Twilio_RestException;
 			    }   
 			}
 			if ($currLevel == $prevLevel){}
-			return $designation_child;
+			return $child;
+		}
+
+		public static function childLocation($location_id = '', $id = 0){
+
+            $tree = array();
+      		$locations = \App\Location::whereNotNull('top_location_id')->get();
+            foreach($locations as $location){
+                $tree[$location->id] = array(
+                    'parent_id' => $location->top_location_id,
+                    'name' => $location->name
+                );
+            }
+            return Helper::getChilds($tree,$location_id,$id);
 		}
 
 		public static function childDesignation($designation_id = '', $id = 0){
 			if($designation_id == '')
 				$designation_id = Auth::user()->designation_id;
+
+			if(!config('config.subordinate')){
+				return ($id) ? Designation::whereTopDesignationId($designation_id)->get()->pluck('id')->all() :
+				Designation::whereTopDesignationId($designation_id)->get()->pluck('full_designation','id')->all();
+			}
+
             $tree = array();
       		$designations = Designation::whereNotNull('top_designation_id')->get();
             foreach($designations as $designation){
@@ -298,6 +363,20 @@ use Services_Twilio_RestException;
             }
             return Helper::getChilds($tree,$designation_id,$id);
 		}
+
+		public static function getParent($designation_id){
+        	$designations = \App\Designation::all()->pluck('top_designation_id','id')->all();
+        	return Helper::getParentDesignation($designation_id,$designations);
+		}
+
+		public static function getParentDesignation($designation_id, $data, $parents=array()) {
+            $parent_id = isset($data[$designation_id]) ? $data[$designation_id] : null;
+            if ($parent_id != null) {
+            	$parents[] = $parent_id;
+                return Helper::getParentDesignation($parent_id, $data, $parents);
+            }
+            return $parents;
+        }
 
 		public static function isChild($child_designation_id,$parent_designation_id = ''){
 			if($parent_designation_id == '')
@@ -448,7 +527,7 @@ use Services_Twilio_RestException;
 		}
 
 		public static function getCustomColId($form){
-			return CustomField::whereForm($form)->pluck('id');
+			return CustomField::whereForm($form)->pluck('id')->all();
 		}
 
 		public static function storeCustomField($form, $id, $request){

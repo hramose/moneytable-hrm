@@ -7,7 +7,6 @@
 			</div>
 		</div>
         <div class="full-content-center animated bounceIn">
-            <h1>{!! trans('messages.account_expired') !!}</h1>
             <h2>{!! trans('messages.account_invalid') !!}</h2>
             <p><a href="/logout">{!! trans('messages.logout') !!}</a></p>
         </div>

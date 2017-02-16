@@ -7,12 +7,6 @@ use Auth;
 Class TaskNoteController extends Controller{
     use BasicController;
 
-	public function __construct()
-	{
-		if(!in_array('utilities', config('limit.available_module')))
-			$this->middleware('feature_available');
-	}
-	
 	public function store(Request $request,$id){
 
 		$note = TaskNote::firstOrNew(['task_id' => $id,'user_id' => Auth::user()->id]);

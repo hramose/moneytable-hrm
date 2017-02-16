@@ -23,10 +23,12 @@ Class ConfigController extends Controller{
         foreach(config('lang') as $key => $value)
         	$languages[$key] = $value['language'];
 
+        $designations = \App\Designation::all()->pluck('full_designation','id')->all();
+
         if(\App\Setup::whereModule('configuration')->whereCompleted(0)->first())
         	\App\Setup::whereModule('configuration')->whereCompleted(0)->update(['completed' => 1]);
 
-		return view('configuration.index',compact('assets','languages'));
+		return view('configuration.index',compact('assets','languages','designations'));
 	}
 
 	public function permission(){
@@ -46,7 +48,7 @@ Class ConfigController extends Controller{
 		$user->auth_token = str_random(40);
 		$user->save();
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_api_token_updated']);
+		$this->logActivity(['module' => 'api_token','activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.api_token_updated'), 'status' => 'success','auth_token' => $user->auth_token]; 
@@ -118,7 +120,7 @@ Class ConfigController extends Controller{
 		if($config_type == 'mail' && \App\Setup::whereModule('mail')->whereCompleted(0)->first())
         	\App\Setup::whereModule('mail')->whereCompleted(0)->update(['completed' => 1]);
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_mail_configuration_updated']);
+		$this->logActivity(['module' => 'mail_configuration','activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.mail_configuration_updated'), 'status' => 'success']; 
@@ -182,7 +184,7 @@ Class ConfigController extends Controller{
 		File::prepend($filename,'<?php return ');
 		File::append($filename, ';');
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_sms_configuration_updated']);
+		$this->logActivity(['module' => 'sms_configuration','activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.sms_configuration_updated'), 'status' => 'success']; 
@@ -209,7 +211,7 @@ Class ConfigController extends Controller{
         if(\App\Setup::whereModule('permission')->whereCompleted(0)->first())
         	\App\Setup::whereModule('permission')->whereCompleted(0)->update(['completed' => 1]);
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_permission_updated']);
+		$this->logActivity(['module' => 'permission','activity' => 'activity_updated']);
 
     	if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.permission_updated'), 'status' => 'success']; 
@@ -259,7 +261,7 @@ Class ConfigController extends Controller{
 
         $config->save();
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_configuration_updated']);
+		$this->logActivity(['module' => 'logo','activity' => 'activity_updated']);
 
     	if($request->has('ajax_submit')){
 	        $response = ['message' => trans('messages.configuration_updated'), 'status' => 'success']; 
@@ -287,7 +289,16 @@ Class ConfigController extends Controller{
             'auto_lock_attendance_days' => 'sometimes|required|min:1|numeric',
             'enable_future_attendance' => 'sometimes|required|min:0|numeric',
             'late_comer_grace_time' => 'sometimes|required|min:0|numeric',
+            'leave_approval_level_multiple' => 'required_if:leave_approval_level,multiple|numeric',
+            'leave_approval_level_detail' => 'required_if:leave_approval_level,designation',
+            'leave_approval_level' => 'sometimes|required',
+            'expense_approval_level_multiple' => 'required_if:expense_approval_level,multiple|numeric',
+            'expense_approval_level_detail' => 'required_if:expense_approval_level,designation',
+            'expense_approval_level' => 'sometimes|required'
         ]);
+
+        $validation_attr = array('leave_approval_level_multiple' => trans('messages.no_of_level'));
+        $validation->setAttributeNames($validation_attr);
 
         if($validation->fails()){
         	if($request->has('ajax_submit')){
@@ -299,6 +310,9 @@ Class ConfigController extends Controller{
         }
 
 		$input = $request->all();
+        if($request->has('leave_approval_level') && $request->input('leave_approval_level') != 'multiple')
+        	$input['leave_approval_level_multiple'] = null;
+
 		foreach($input as $key => $value){
         	if(!in_array($key, config('constants.ignore_var'))){
         		$config = \App\Config::firstOrNew(['name' => $key]);
@@ -307,6 +321,7 @@ Class ConfigController extends Controller{
         	}
         }
 
+
 		$config_type = $request->input('config_type');
 
 		if($config_type == 'general' && \App\Setup::whereModule('general_configuration')->whereCompleted(0)->first())
@@ -314,7 +329,7 @@ Class ConfigController extends Controller{
         elseif($config_type == 'system' && \App\Setup::whereModule('system_configuration')->whereCompleted(0)->first())
         	\App\Setup::whereModule('system_configuration')->whereCompleted(0)->update(['completed' => 1]);
 
-		$this->logActivity(['module' => 'configuration','activity' => 'activity_configuration_updated']);
+		$this->logActivity(['module' => 'configuration','activity' => 'activity_updated']);
 
         	if($request->has('ajax_submit')){
 		        $response = ['message' => trans('messages.configuration_updated'), 'status' => 'success']; 
@@ -341,6 +356,8 @@ Class ConfigController extends Controller{
 		if($config_type == 'menu' && \App\Setup::whereModule('menu')->whereCompleted(0)->first())
         	\App\Setup::whereModule('menu')->whereCompleted(0)->update(['completed' => 1]);
         
+		$this->logActivity(['module' => 'menu','activity' => 'activity_updated']);
+
 		$response = ['status' => 'success','message' => trans('messages.menu').' '.trans('messages.configuration').' '.trans('messages.updated')];
         if(config('config.application_setup_info') && defaultRole()){
         	$setup_data = Helper::setupInfo();

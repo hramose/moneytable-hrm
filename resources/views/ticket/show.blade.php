@@ -111,7 +111,7 @@
 							<div class="user-profile-content">
 								{!! Form::model($ticket,['method' => 'POST','route' => ['ticket-comment.store',$ticket->id] ,'class' => 'ticket-comment-form','id' => 'ticket-comment-form','data-list-alter' => 'ticket-comment-lists']) !!}
 								  <div class="form-group">
-								    {!! Form::textarea('comment','',['size' => '30x3', 'class' => 'form-control ', 'placeholder' => trans('messages.comment'),'data-autoresize' => 1])!!}
+								    {!! Form::textarea('comment','',['size' => '30x3', 'class' => 'form-control ', 'placeholder' => trans('messages.comment'),'data-autoresize' => 1,'style' => 'border:0px;border-bottom:1px solid #cccccc;'])!!}
 								    <span class="countdown"></span>
 								  </div>
 								  {!! Form::submit(trans('messages.post'),['class' => 'btn btn-primary pull-right btn-sm']) !!}

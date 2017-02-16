@@ -14,6 +14,12 @@ Class AwardController extends Controller{
 
 	protected $form = 'award-form';
 
+	public function __construct()
+	{
+		// if(\App\Menu::whereName('award')->whereVisible(0)->count())
+		// 	$this->middleware('feature_available');
+	}
+
 	public function index(Award $award){
 
 		if(!Entrust::can('list_award'))
@@ -30,8 +36,10 @@ Class AwardController extends Controller{
         		trans('messages.date')
         		);
 
-        if(Entrust::can('manage_all_award'))
+        if(defaultRole())
         	$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+        elseif(Entrust::can('manage_all_award'))
+        	$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
         elseif(Entrust::can('manage_subordinate_award')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
         	$users = \App\User::whereIn('designation_id',$child_designations)->get()->pluck('full_name_with_designation','id');
@@ -116,8 +124,10 @@ Class AwardController extends Controller{
 		if(!Entrust::can('create_award'))
             return view('common.error',['message' => trans('messages.permission_denied')]);
 
-        if(Entrust::can('manage_all_award'))
+        if(defaultRole())
         	$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+        elseif(Entrust::can('manage_all_award'))
+        	$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
         elseif(Entrust::can('manage_subordinate_award')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
         	$users = \App\User::whereIn('designation_id',$child_designations)->get()->pluck('full_name_with_designation','id');
@@ -143,8 +153,10 @@ Class AwardController extends Controller{
 			$selected_user[] = $user->id;
 		}
 
-		if(Entrust::can('manage_all_award'))
+        if(defaultRole())
         	$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+        elseif(Entrust::can('manage_all_award'))
+        	$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
         elseif(Entrust::can('manage_subordinate_award')){
 			$child_designations = Helper::childDesignation($award->UserAdded->designation_id,1);
         	$users = \App\User::whereIn('designation_id',$child_designations)->get()->pluck('full_name_with_designation','id');

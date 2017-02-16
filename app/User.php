@@ -65,9 +65,24 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
         return $this->hasMany('App\UserShift'); 
     }
 
+    public function userLocation()
+    {
+        return $this->hasMany('App\UserLocation'); 
+    }
+
     public function bankAccount()
     {
         return $this->hasMany('App\BankAccount'); 
+    }
+
+    public function workExperience()
+    {
+        return $this->hasMany('App\WorkExperience'); 
+    }
+
+    public function qualification()
+    {
+        return $this->hasMany('App\Qualification'); 
     }
 
     public function document()
@@ -82,7 +97,7 @@ class User extends Model implements AuthenticatableContract, CanResetPasswordCon
 
     public function task()
     {
-        return $this->belongsToMany('App\Task','task_user','task_id','user_id');
+        return $this->belongsToMany('App\Task','task_user','user_id','task_id')->withPivot('rating', 'comment','updated_at');
     }
 
     public function leave()

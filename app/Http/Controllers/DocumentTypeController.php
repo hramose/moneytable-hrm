@@ -49,7 +49,6 @@ Class DocumentTypeController extends Controller{
         if($request->has('ajax_submit')){
         	$new_data = array('value' => $document_type->name,'id' => $document_type->id,'field' => 'document_type_id');
         	$data = $this->lists();
-
             $response = ['message' => trans('messages.document_type').' '.trans('messages.added'), 'status' => 'success','data' => $data,'new_data' => $new_data]; 
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
         }
@@ -64,8 +63,7 @@ Class DocumentTypeController extends Controller{
 		$this->logActivity(['module' => 'document_type','unique_id' => $document_type->id,'activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
-        	$data = $this->lists();
-	        $response = ['message' => trans('messages.document_type').' '.trans('messages.updated'), 'status' => 'success','data' => $data]; 
+	        $response = ['message' => trans('messages.document_type').' '.trans('messages.updated'), 'status' => 'success']; 
 	        return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	    }
 

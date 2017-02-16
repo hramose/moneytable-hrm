@@ -39,8 +39,10 @@ Class TaskController extends Controller{
 			'id' => 'task_table'
 		);
 
-		if(Entrust::can('manage_all_task'))
+        if(defaultRole())
 			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_task'))
+			$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_task')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
@@ -101,6 +103,145 @@ Class TaskController extends Controller{
         return json_encode($list);
 	}
 
+	public function userTask(){
+
+        $col_heads = array(
+        		trans('messages.title'),
+        		trans('messages.start_date'),
+        		trans('messages.date_of_due'),
+        		trans('messages.progress'),
+        		trans('messages.rating'),
+        		trans('messages.rating').' Star',
+        		trans('messages.comment')
+        		);
+
+        $menu = ['task'];
+        $table_info = array(
+			'source' => 'user-task',
+			'title' => 'User Task',
+			'id' => 'user_task_table',
+			'form' => 'user_task_form'
+		);
+
+        if(defaultRole())
+			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_task'))
+			$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_subordinate_task')){
+			$child_designations = Helper::childDesignation($task->UserAdded->designation_id,1);
+			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
+		} else 
+			$users = \App\User::whereId(Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
+
+		return view('task.user_task',compact('col_heads','menu','table_info','users'));
+	}
+
+	public function userTaskLists(Request $request){
+		$user_id = ($request->input('user_id')) ? : Auth::user()->id;
+
+		$tasks = Task::whereHas('user',function($q) use($user_id){
+			$q->where('user_id',$user_id);
+		})->get();
+
+		$rows = array();
+
+		foreach($tasks as $task){
+
+			$filtered_task = $task->User->whereLoose('id',$user_id)->first();
+			$rating = $filtered_task->pivot->rating;
+			$comment = $filtered_task->pivot->comment;
+
+			$rows[] = array(
+				$task->title,
+				showDate($task->start_date),
+				showDate($task->due_date),
+				$task->progress.'%',
+				(config('config.sub_task_rating')) ? Helper::getSubTaskRating($task->id,$user_id,1) : Helper::getRatingStar($rating,1),
+				(config('config.sub_task_rating')) ? Helper::getSubTaskRating($task->id,$user_id) : Helper::getRatingStar($rating),
+				$comment
+				);
+		}
+        $list['aaData'] = $rows;
+        return json_encode($list);
+	}
+
+	public function userTaskRating(){
+
+        $col_heads = array(
+        		trans('messages.employee'),
+        		'No of Task',
+        		'Completed Task',
+        		'Overdue Task',
+        		'Average Rating',
+        		'Average Rating Star'
+        		);
+
+        $menu = ['task'];
+        $table_info = array(
+			'source' => 'user-task-rating',
+			'title' => 'User Task Rating',
+			'id' => 'user_task_rating_table',
+			'form' => 'user_task_rating_form'
+		);
+
+		$locations = \App\Location::all()->pluck('name','id')->all();
+		$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
+		$designations = \App\Designation::whereIn('id',$child_designations)->get()->pluck('full_designation','id')->all();
+
+		return view('task.user_task_rating',compact('col_heads','menu','table_info','locations','designations'));
+	}
+
+	public function userTaskRatingLists(Request $request){
+
+        $rows=array();
+
+        if(defaultRole())
+			$users = \App\User::all();
+		elseif(Entrust::can('manage_all_task'))
+			$users = \App\User::whereIsHidden(0)->get();
+		elseif(Entrust::can('manage_subordinate_task')){
+			$child_designations = Helper::childDesignation($task->UserAdded->designation_id,1);
+			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get();
+		} else 
+			$users = \App\User::whereId(Auth::user()->id)->get();
+
+		$location = ($request->has('location_id')) ? \App\Location::whereId($request->input('location_id'))->first() : null;
+
+		if($request->input('designation_id'))
+			$users = $users->whereLoose('designation_id',$request->input('designation_id'))->all();
+
+		foreach($users as $user){
+			$rating = 0;
+			$completed_task = $user->Task->whereLoose('progress','100')->count();
+			$overdue_task = $user->Task->filter(function($item){
+					return (data_get($item, 'progress') < '100');
+				})->filter(function($item) {
+					return (data_get($item, 'due_date') < date('Y-m-d'));
+				})->count();
+			$total_task = $user->Task->count();
+			foreach($user->Task as $task){
+				if(config('config.sub_task_rating'))
+					$rating += Helper::getSubTaskRating($task->id,$user->id,1);
+				else
+					$rating += $task->pivot->rating;
+			}
+
+			$average_rating = ($total_task) ? $rating/$total_task : 0;
+
+			if(!$location || $location->name == Helper::getLocation(date('Y-m-d'),$user->id))
+			$rows[] = array(
+				$user->full_name_with_designation,
+				$total_task,
+				$completed_task,
+				$overdue_task,
+				Helper::getRatingStar($average_rating,1),
+				Helper::getRatingStar($average_rating)
+			);
+		}
+        $list['aaData'] = $rows;
+        return json_encode($list);
+	}
+
 	public function assignTask(Request $request,$id){
 
 		if(!Entrust::can('assign_task')){
@@ -122,7 +263,7 @@ Class TaskController extends Controller{
 		}
 
 	    $task->user()->sync(($request->input('user_id')) ? : []);
-		$this->logActivity(['module' => 'task','unique_id' => $task->id,'activity' => 'activity_user_assigned']);
+		$this->logActivity(['module' => 'task','unique_id' => $task->id,'activity' => 'activity_assigned']);
 
         if($request->has('ajax_submit')){
 			$new_data = '';
@@ -191,14 +332,20 @@ Class TaskController extends Controller{
 	public function show(Task $task){
 
 		$assigned_to = array();
-		foreach($task->User as $user)
+		$rating_users = array();
+		foreach($task->User as $user){
 			$assigned_to[] = $user->id;
+			if($task->user_id != $user->id && $user->pivot->rating == null)
+				$rating_users[$user->id] = $user->full_name_with_designation;
+		}
 
 		if(!in_array(Auth::user()->id,$assigned_to) && $task->user_id != Auth::user()->id)
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
-		if(Entrust::can('manage_all_task'))
+		if(defaultRole())
 			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_task'))
+			$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_task')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
@@ -212,7 +359,93 @@ Class TaskController extends Controller{
         $menu = ['task'];
         $assets = ['rte'];
 
-		return view('task.show',compact('task','menu','assets','users','selected_user'));
+		return view('task.show',compact('task','menu','assets','users','selected_user','rating_users'));
+	}
+
+	public function storeRating(Request $request, $id){
+		$task = Task::find($id);
+
+		$validation_input['user_id'] = 'required';
+
+		if(!config('config.sub_task_rating'))
+			$validation_input['rating'] = 'required';
+
+        $validation = Validator::make($request->all(),$validation_input);
+
+        if($validation->fails()){
+            if($request->has('ajax_submit')){
+                $response = ['message' => $validation->messages()->first(), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors($validation->messages()->first());
+        }
+
+		if(!$task || $task->user_id != Auth::user()->id){
+	        if($request->has('ajax_submit')){
+	            $response = ['message' => trans('messages.permission_denied'), 'status' => 'error']; 
+	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+	        }
+			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
+		}
+
+		if(!config('config.sub_task_rating')){
+			$task->user()->sync([$request->input('user_id') => [
+				'rating' => $request->input('rating'),
+				'comment' => ($request->has('comment')) ? $request->input('comment') : null
+			]], false); 
+		} else {
+			$rating = $request->input('rating');
+			$comment = $request->input('comment');
+			foreach($task->SubTask as $sub_task){
+				$sub_task_rating = \App\SubTaskRating::firstOrNew(['sub_task_id' => $sub_task->id,'user_id' => $request->input('user_id')]);
+				$sub_task_rating->sub_task_id = $sub_task->id;
+				$sub_task_rating->user_id = $request->input('user_id');
+				$sub_task_rating->rating = $rating[$sub_task->id];
+				$sub_task_rating->comment = $comment[$sub_task->id];
+				$sub_task_rating->save();
+			}
+		}
+
+        if($request->has('ajax_submit')){
+            $response = ['message' => trans('messages.rating').' '.trans('messages.added'), 'status' => 'success']; 
+            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+        }
+		return redirect('/task/'.$task->id)->withSuccess(trans('messages.rating').' '.trans('messages.added'));
+	}
+
+	public function destroyRating($user_id,$task_id){
+
+		$task = Task::find($task_id);
+
+		if(!$task || $task->user_id != Auth::user()->id){
+	        if($request->has('ajax_submit')){
+	            $response = ['message' => trans('messages.permission_denied'), 'status' => 'error']; 
+	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+	        }
+			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
+		}
+
+		if(config('config.sub_task_rating')){
+			$sub_tasks = $task->SubTask->pluck('id')->all();
+			\App\SubTaskRating::where('user_id','=',$user_id)->whereIn('sub_task_id',$sub_tasks)->delete();
+		} else {
+			$valid_rating = DB::table('task_user')->whereTaskId($task->id)->whereUserId($user_id)->whereNotNull('rating')->count();
+
+			if(!$valid_rating){
+		        if($request->has('ajax_submit')){
+		            $response = ['message' => trans('messages.permission_denied'), 'status' => 'error']; 
+		            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+		        }
+				return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
+			}
+
+			DB::table('task_user')->whereTaskId($task->id)->whereUserId($user_id)->update([
+				'rating' => null,
+				'comment' => null
+			]);
+		}
+
+		return redirect('/task/'.$task_id)->withSuccess(trans('messages.rating').' '.trans('messages.deleted'));
 	}
 
 	public function create(){
@@ -242,8 +475,10 @@ Class TaskController extends Controller{
 		foreach($task->User as $user)
 			$selected_user[] = $user->id;
 
-		if(Entrust::can('manage_all_task'))
+		if(defaultRole())
 			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_task'))
+			$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_task')){
 			$child_designations = Helper::childDesignation($task->UserAdded->designation_id,1);
 			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
@@ -325,6 +560,21 @@ Class TaskController extends Controller{
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
         }
 		return redirect('/task')->withSuccess(trans('messages.task').' '.trans('messages.updated'));
+	}
+
+	public function rating($user_id,$task_id){
+		$task = Task::find($task_id);
+		$user = \App\User::find($user_id);
+
+        $users = $task->User->pluck('id')->all();
+
+		if(!$task || !$user || $task->user_id != Auth::user()->id || !in_array($user->id,$users))
+            return view('common.error',['message' => trans('messages.permission_denied')]);
+
+        if(!$task->SubTask->count())
+            return view('common.error',['message' => 'Please add atleast one sub task to rate.']);
+
+        return view('task.sub_task_rating',compact('task','user'));
 	}
 
 	public function destroy(Task $task,Request $request){

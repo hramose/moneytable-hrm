@@ -15,103 +15,122 @@ use App\Holiday;
 use App\Payroll;
 use App\Classes\Helper;
 use Validator;
+use App\Jobs\GeneratePayroll;
 
 Class PayrollController extends Controller{
     use BasicController;
 	protected $form = 'payroll-form';
 
-  public function __construct()
-  {
-      $this->middleware('officeshift');
-  }
-    
+	public function __construct()
+	{
+		$this->middleware('officeshift');
+	}
+
+	public function test(){
+	}
+
 	public function index(){
 
-    $col_heads = array(
-    		trans('messages.option'),
+	$col_heads = array(
+			trans('messages.option'),
 	        trans('messages.slip'),
 	        trans('messages.name'),
 	        trans('messages.date'),
-    		trans('messages.duration'),
-    		);
+			trans('messages.duration'),
+			);
 
-    $salary_types = SalaryType::all();
-    foreach($salary_types as $salary_type)
-      array_push($col_heads,$salary_type->head);
-    
-    if(config('config.payroll_contribution_field')){
+	array_push($col_heads,trans('messages.hourly').' '.trans('messages.salary'));
+	array_push($col_heads,trans('messages.overtime').' '.trans('messages.salary'));
+	array_push($col_heads,trans('messages.late').' '.trans('messages.salary').' '.trans('messages.deduction'));
+	array_push($col_heads,trans('messages.early_leaving').' '.trans('messages.salary').' '.trans('messages.deduction'));
+
+	$salary_types = SalaryType::all();
+	foreach($salary_types as $salary_type)
+	  array_push($col_heads,$salary_type->head);
+
+	if(config('config.payroll_contribution_field')){
 	    array_push($col_heads,trans('messages.date_of_contribution'));
 	    array_push($col_heads,trans('messages.employer_contribution'));
 	    array_push($col_heads,trans('messages.employee_contribution'));
-    }
+	}
 	array_push($col_heads,trans('messages.total'));
-    $col_heads = Helper::putCustomHeads($this->form, $col_heads);
+	$col_heads = Helper::putCustomHeads($this->form, $col_heads);
 
-    $table_info = array(
-      'source' => 'payroll',
-      'title' => 'Payroll List',
-      'id' => 'payroll_table'
-    );
-    $menu = ['payroll'];
+	$table_info = array(
+	  'source' => 'payroll',
+	  'title' => 'Payroll List',
+	  'id' => 'payroll_table'
+	);
+	$menu = ['payroll'];
 
 		return view('payroll.index',compact('col_heads','menu','table_info'));
 	}
 
-  public function lists(Request $request){
+	public function lists(Request $request){
 
-      if(Entrust::can('manage_all_employee'))
-        $payroll_slips = PayrollSlip::all();
-      elseif(Entrust::can('manage_subordinate_employee')){
-        $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
-        $child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
-        array_push($child_users, Auth::user()->id);
-        $payroll_slips = PayrollSlip::whereIn('user_id',$child_users)->get();
-      } else {
-        $payroll_slips = PayrollSlip::where('user_id','=',Auth::user()->id)->get();
-      }
+	  if(Entrust::can('manage_all_employee'))
+	    $payroll_slips = PayrollSlip::all();
+	  elseif(Entrust::can('manage_subordinate_employee')){
+	    $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
+	    $child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
+	    array_push($child_users, Auth::user()->id);
+	    $payroll_slips = PayrollSlip::whereIn('user_id',$child_users)->get();
+	  } else {
+	    $payroll_slips = PayrollSlip::where('user_id','=',Auth::user()->id)->get();
+	  }
 
-      $rows = array();
+	  $rows = array();
 	  $col_ids = Helper::getCustomColId($this->form);
 	  $values = Helper::fetchCustomValues($this->form);
-      $salary_types = SalaryType::all();
-      $sum_total = 0;
-      foreach($payroll_slips as $payroll_slip){
+	  $salary_types = SalaryType::all();
+	  $sum_total = 0;
+	  foreach($payroll_slips as $payroll_slip){
 
-        $amount = array();
-        $sum_amount = array();
-        $total = 0;
+	    $amount = array();
+	    $sum_amount = array();
+	    $total = 0;
 
-        foreach($salary_types as $salary_type){
-          $amount[$salary_type->id] = 0;
-          $sum_amount[$salary_type->id] = 0;
-        }
+	    foreach($salary_types as $salary_type){
+	      $amount[$salary_type->id] = 0;
+	      $sum_amount[$salary_type->id] = 0;
+	    }
 
-        foreach($payroll_slip->Payroll as $payroll){
-          $amount[$payroll->salary_type_id] = round($payroll->amount,2);
-          $sum_amount[$payroll->salary_type_id] += round($payroll->amount,2);
-        }
+	    foreach($payroll_slip->Payroll as $payroll){
+	      $amount[$payroll->salary_type_id] = round($payroll->amount,2);
+	      $sum_amount[$payroll->salary_type_id] += round($payroll->amount,2);
+	    }
 
-        foreach($salary_types as $salary_type){
-          if($salary_type->salary_type == "earning")
-            $total += $amount[$salary_type->id];
-          else
-            $total -= $amount[$salary_type->id];
-        }
+	    foreach($salary_types as $salary_type){
+	      if($salary_type->salary_type == "earning")
+	        $total += $amount[$salary_type->id];
+	      else
+	        $total -= $amount[$salary_type->id];
+	    }
 
-        $row = array(
-            '<div class="btn-group btn-group-xs">'.
-              '<a href="/payroll/'.$payroll_slip->id.'" class="btn btn-default btn-xs" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-arrow-circle-o-right"></i></a>'.
-              (Entrust::can('generate_payroll') ? delete_form(['payroll.destroy',$payroll_slip->id]) : '').'</div>',
-            $payroll_slip->id,
-            $payroll_slip->User->full_name_with_designation,
-            date('d M Y',strtotime($payroll_slip->created_at)),
-            showDate($payroll_slip->from_date).' '.trans('messages.to').' '.showDate($payroll_slip->to_date),
-            );  
+	    $total += $payroll_slip->hourly;
+	    $total += $payroll_slip->overtime;
+	    $total -= $payroll_slip->late;
+	    $total -= $payroll_slip->early_leaving;
 
-        foreach($amount as $value)
-          array_push($row,currency($value));
-        
-    	if(config('config.payroll_contribution_field')){
+	    $row = array(
+	        '<div class="btn-group btn-group-xs">'.
+	          '<a href="/payroll/'.$payroll_slip->id.'" class="btn btn-default btn-xs" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-arrow-circle-o-right"></i></a>'.
+	          (Entrust::can('generate_payroll') ? delete_form(['payroll.destroy',$payroll_slip->id]) : '').'</div>',
+	        $payroll_slip->id,
+	        $payroll_slip->User->full_name_with_designation,
+	        date('d M Y',strtotime($payroll_slip->created_at)),
+	        showDate($payroll_slip->from_date).' '.trans('messages.to').' '.showDate($payroll_slip->to_date),
+	        );  
+
+	    array_push($row,currency($payroll_slip->hourly));
+	    array_push($row,currency($payroll_slip->overtime));
+	    array_push($row,currency($payroll_slip->late));
+	    array_push($row,currency($payroll_slip->early_leaving));
+
+	    foreach($amount as $value)
+	      array_push($row,currency($value));
+	    
+		if(config('config.payroll_contribution_field')){
 	        array_push($row,showDate($payroll_slip->date_of_contribution));
 	        array_push($row,currency($payroll_slip->employer_contribution));
 	        array_push($row,currency($payroll_slip->employee_contribution));
@@ -119,19 +138,138 @@ Class PayrollController extends Controller{
 	    array_push($row,currency($total));
 
 	    $id = $payroll_slip->id;
-        
-        $sum_total += $total;
-        unset($amount);
+	    
+	    $sum_total += $total;
+	    unset($amount);
 
 		foreach($col_ids as $col_id)
 			array_push($row,isset($values[$id][$col_id]) ? $values[$id][$col_id] : '');
 
-        $rows[] = $row;
-      }
+	    $rows[] = $row;
+	  }
 
-      $list['aaData'] = $rows;
-      return json_encode($list);
-  }
+	  $list['aaData'] = $rows;
+	  return json_encode($list);
+	}
+
+	public function customReport(){
+
+	$col_heads = array(
+	        trans('messages.employee_code'),
+	        trans('messages.duration'),
+	        trans('messages.account_number'),
+	        trans('messages.bank_name'),
+	        trans('messages.bank_code'),
+	        trans('messages.employee'),
+	        trans('messages.date_of_joining'),
+	        trans('messages.designation'),
+	        trans('messages.department'),
+			);
+
+	$col_heads = Helper::putCustomHeads($this->form, $col_heads);
+	
+	array_push($col_heads,trans('messages.day'));
+	array_push($col_heads,trans('messages.salary'));
+
+	$leave_types = \App\LeaveType::all();
+	foreach($leave_types as $leave_type)
+	  array_push($col_heads,$leave_type->name);
+
+	$table_info = array(
+	  'source' => 'payroll-custom-report',
+	  'title' => 'Payroll List',
+	  'id' => 'payroll_table'
+	);
+	$menu = ['payroll'];
+
+		return view('payroll.index',compact('col_heads','menu','table_info'));
+	}
+
+	public function customReportLists(Request $request){
+
+	  if(Entrust::can('manage_all_employee'))
+	    $payroll_slips = PayrollSlip::all();
+	  elseif(Entrust::can('manage_subordinate_employee')){
+	    $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
+	    $child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
+	    array_push($child_users, Auth::user()->id);
+	    $payroll_slips = PayrollSlip::whereIn('user_id',$child_users)->get();
+	  } else {
+	    $payroll_slips = PayrollSlip::where('user_id','=',Auth::user()->id)->get();
+	  }
+
+	  $leave_types = \App\LeaveType::all();
+
+	  $rows = array();
+	  $col_ids = Helper::getCustomColId($this->form);
+	  $values = Helper::fetchCustomValues($this->form);
+	  $salary_types = SalaryType::all();
+	  $sum_total = 0;
+
+	  foreach($payroll_slips as $payroll_slip){
+	  	$holidays = \App\Holiday::where('date','>=',$payroll_slip->from_date)->where('date','<=',$payroll_slip->to_date)->get()->pluck('date')->all();
+
+	    $amount = array();
+	    $sum_amount = array();
+	    $total = 0;
+
+	    foreach($salary_types as $salary_type){
+	      $amount[$salary_type->id] = 0;
+	      $sum_amount[$salary_type->id] = 0;
+	    }
+
+	    foreach($payroll_slip->Payroll as $payroll){
+	      $amount[$payroll->salary_type_id] = round($payroll->amount,2);
+	      $sum_amount[$payroll->salary_type_id] += round($payroll->amount,2);
+	    }
+
+	    foreach($salary_types as $salary_type){
+	      if($salary_type->salary_type == "earning")
+	        $total += $amount[$salary_type->id];
+	      else
+	        $total -= $amount[$salary_type->id];
+	    }
+
+	    $clocks = \App\Clock::whereUserId($payroll_slip->User->id)->where('date','>=',$payroll_slip->from_date)->where('date','<=',$payroll_slip->to_date)->get()->pluck('date')->all();
+
+	    $working = array_merge($holidays,$clocks);
+	    $days = count(array_unique($working));
+
+	    $leave_data = $this->getLeaveBalance($payroll_slip->User,$payroll_slip->from_date);
+	    $used = $leave_data['used'];
+	    $allotted = $leave_data['allotted'];
+
+	    $bank_account = $payroll_slip->User->BankAccount->where('is_primary',1)->first();
+
+	    $row = array(
+	        $payroll_slip->User->Profile->employee_code,
+	        showDate($payroll_slip->from_date).' '.trans('messages.to').' '.showDate($payroll_slip->to_date),
+	        ($bank_account ? $bank_account->account_number : '-'),
+	        ($bank_account ? $bank_account->bank_name : '-'),
+	        ($bank_account ? $bank_account->bank_code : '-'),
+	        $payroll_slip->User->full_name,
+	        showDate($payroll_slip->User->Profile->date_of_joining),
+	        $payroll_slip->User->Designation->name,
+	        $payroll_slip->User->Designation->Department->name,
+	        );  
+
+	    $id = $payroll_slip->id;
+		foreach($col_ids as $col_id)
+			array_push($row,isset($values[$id][$col_id]) ? $values[$id][$col_id] : '');
+
+		array_push($row,$days);
+	    array_push($row,currency($total));
+
+	    foreach($leave_types as $leave_type)
+			array_push($row,$used[$leave_type->id].'/'.$allotted[$leave_type->id]);
+
+	    unset($amount);
+	    $rows[] = $row;
+	  }
+
+	  $list['aaData'] = $rows;
+	  return json_encode($list);
+	}
 
 	public function show($id){
 
@@ -144,9 +282,9 @@ Class PayrollController extends Controller{
 		if(!$this->employeeAccessible($user) && $payroll_slip->user_id != Auth::user()->id)
 			return redirect('/payroll')->withErrors(trans('messages.invalid_link'));
 
-    	$payroll = Payroll::join('payroll_slip','payroll_slip.id','=','payroll.payroll_slip_id')
-    		->where('payroll_slip_id','=',$id)->get()
-        	->pluck('amount','salary_type_id')->all();
+    	$payroll = $payroll_slip->Payroll->pluck('amount','salary_type_id')->all();
+
+        $contract = Helper::getContract($user->id,$payroll_slip->from_date);
 
     	$earning_salary_types = SalaryType::where('salary_type','=','earning')->get();
    	 	$deduction_salary_types = SalaryType::where('salary_type','=','deduction')->get();
@@ -155,8 +293,10 @@ Class PayrollController extends Controller{
 		$data = $this->getAttendanceSummary($user,$payroll_slip->from_date,$payroll_slip->to_date);
 		$summary = $data['summary'];
 		$att_summary = $data['att_summary'];
+		$total_earning = 0;
+		$total_deduction = 0;
 
-		return view('payroll.show',compact('payroll_slip','payroll','user','earning_salary_types','deduction_salary_types','summary','att_summary','salaries'));
+		return view('payroll.show',compact('payroll_slip','payroll','user','earning_salary_types','deduction_salary_types','summary','att_summary','salaries','contract','total_earning','total_deduction'));
 
 	}
 
@@ -169,8 +309,10 @@ Class PayrollController extends Controller{
 		$to_date = $request->input('to_date') ? : '';
 		$user_id = $request->input('user_id') ? : '';
 
-	    if(Entrust::can('manage_all_employee'))
+		if(defaultRole())
 	      $users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+	    elseif(Entrust::can('manage_all_employee'))
+	      $users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 	    elseif(Entrust::can('manage_subordinate_employee')){
 	      $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 	      $child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
@@ -213,8 +355,10 @@ Class PayrollController extends Controller{
 			return redirect()->back()->withInput()->withErrors(trans('messages.change_in_contract_period'));
 
 		$data = $this->getAttendanceSummary($user,$from_date,$to_date);
+		$total = $data['total'];
 		$summary = $data['summary'];
 		$att_summary = $data['att_summary'];
+		$working_days = $att_summary['P'] + $att_summary['L'] + $att_summary['H'];
 
 	  	$no_of_days = dateDiff($to_date,$from_date);
 	    $salary_fraction = ($no_of_days) ? ($att_summary['W'] / $no_of_days) : 0;
@@ -223,138 +367,71 @@ Class PayrollController extends Controller{
 	    $deduction_salary_types = SalaryType::where('salary_type','=','deduction')->get();
 	    $salaries = Helper::getContract($user->id,$from_date)->Salary;
 
-		return view('payroll.create',compact('users','user','user_id','earning_salary_types','deduction_salary_types','salaries','summary','att_summary','salary_fraction','menu','from_date','to_date'));
+		$from_date_month = date('m',strtotime($from_date));
+		$to_date_month = date('m',strtotime($to_date));
+		$from_date_year = date('Y',strtotime($from_date));
+		$to_date_year = date('Y',strtotime($to_date));
+		
+		if($from_date_month != $to_date_month){
+			$payroll_days = (config('config.payroll_days') == 'from_date') ? cal_days_in_month(CAL_GREGORIAN, $from_date_month, $from_date_year) : cal_days_in_month(CAL_GREGORIAN, $to_date_month, $to_date_year);
+		} else
+			$payroll_days = cal_days_in_month(CAL_GREGORIAN, $from_date_month, $from_date_year);
+
+		$salary_values = array();
+
+		foreach($earning_salary_types as $earning_salary_type)
+			$salary_values[$earning_salary_type->id] = 0;
+		foreach($deduction_salary_types as $deduction_salary_type)
+			$salary_values[$deduction_salary_type->id] = 0;
+
+		foreach($salaries as $salary){
+			$salary_values[$salary->salary_type_id] = ($contract->hourly_payroll) ? 0 : (($salary->SalaryType->is_fixed) ? round($salary->amount,config('config.currency_decimal')) : round((($salary->amount/$payroll_days)*$working_days),config('config.currency_decimal')) );
+		}
+
+		$hourly_payroll = $contract->hourly_payroll;
+		$hourly = round((floor($total['total_working'] / 3600) * $contract->hourly_rate),config('config.currency_decimal'));
+		$late = (!$contract->hourly_payroll) ? round((floor($total['total_late'] / 3600) * $contract->late_hourly_rate),config('config.currency_decimal')) : 0;
+		$overtime = (!$contract->hourly_payroll) ? round((floor($total['total_overtime'] / 3600) * $contract->overtime_hourly_rate),config('config.currency_decimal')) : 0;
+		$early_leaving = (!$contract->hourly_payroll) ? round((floor($total['total_early'] / 3600) * $contract->early_leaving_hourly_rate),config('config.currency_decimal')) : 0;
+
+		return view('payroll.create',compact('users','user','user_id','earning_salary_types','deduction_salary_types','salaries','summary','att_summary','salary_fraction','menu','from_date','to_date','salary_values','hourly','late','overtime','early_leaving','hourly_payroll'));
 	}
 
-	public function getAttendanceSummary($user,$from_date,$to_date){
+	public function createMultiple(){
+		if(!Entrust::can('generate_multiple_payroll'))
+			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
-        $clocks = Clock::where('date','>=',$from_date)->where('date','<=',$to_date)->get();
-        $holidays = Holiday::where('date','>=',$from_date)->where('date','<=',$to_date)->get();
+		return view('payroll.multiple');
+	}
 
-		$leave_approved = array();
+	public function postCreateMultiple(Request $request){
+		if(!Entrust::can('generate_multiple_payroll'))
+			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
-        $leaves = \App\Leave::whereUserId($user->id)->whereStatus('approved')->where(function($query) use($from_date,$to_date) {
-            $query->whereBetween('from_date',array($from_date,$to_date))
-            ->orWhereBetween('to_date',array($from_date,$to_date))
-            ->orWhere(function($query1) use($from_date,$to_date) {
-                $query1->where('from_date','<',$from_date)
-                ->where('to_date','>',$to_date);
-            });
-        })->get();
-        foreach($leaves as $leave){
-            $leave_approved_dates = ($leave->approved_date) ? explode(',',$leave->approved_date) : [];
-            foreach($leave_approved_dates as $leave_approved_date)
-                $leave_approved[] = $leave_approved_date;
-        }
+		$validation = Validator::make($request->all(),[
+		'from_date' => 'required|date|before_equal:to_date',
+		'to_date' => 'required|date'
+		]);
 
-        $total_late = 0;
-        $total_early = 0;
-        $total_overtime = 0;
-        $total_working = 0;
-        $total_rest = 0;
-
-        $date = $from_date;
-        $tag_count = array();
-        while($date <= $to_date){
-        	$tag = '';
-        	$late = 0;
-        	$early = 0;
-        	$working = 0;
-        	$overtime = 0;
-        	$rest = 0;
-        	
-        	$my_shift = Helper::getShift($date,$user->id);
-        	$my_shift->in_time = $date.' '.$my_shift->in_time;
-        	
-        	if($my_shift->overnight)
-        		$my_shift->out_time = date('Y-m-d',strtotime($date . ' +1 days')).' '.$my_shift->out_time;
-        	else
-        		$my_shift->out_time = $date.' '.$my_shift->out_time;
-
-        	$out = $clocks->whereLoose('date',$date)->whereLoose('user_id',$user->id)->sortBy('clock_in')->last();
-        	$in = $clocks->whereLoose('date',$date)->whereLoose('user_id',$user->id)->sortBy('clock_in')->first();
-			$records = $clocks->whereLoose('date',$date)->whereLoose('user_id',$user->id)->all();
-
-			$late = (isset($in) && (strtotime($in->clock_in) > strtotime($my_shift->in_time)) && $my_shift->in_time != $my_shift->out_time) ? abs(strtotime($my_shift->in_time) - strtotime($in->clock_in)) : 0;
-
-			if($late){
-				$tag_count[] = 'L';
-				$tag .= Helper::getAttendanceTag('late');
+		if($validation->fails()){
+			if($request->has('ajax_submit')){
+			    $response = ['message' => $validation->messages()->first(), 'status' => 'error']; 
+			    return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 			}
+			return redirect('/dashboard')->withErrors($validation->messages()->first());
+		}
 
-			$total_late += $late;
-			$early = (isset($out) && $out->clock_out != null && (strtotime($out->clock_out) < strtotime($my_shift->out_time)) && $my_shift->in_time != $my_shift->out_time) ? abs(strtotime($my_shift->out_time) - strtotime($out->clock_out)) : 0;
+		$from_date = $request->input('from_date');
+		$to_date = $request->input('to_date');
+		$send_mail = ($request->has('send_mail')) ? 1 : 0;
 
-			if($early){
-				$tag_count[] = 'E';
-				$tag .= Helper::getAttendanceTag('early');
-			}
+		$this->dispatch(new GeneratePayroll($from_date,$to_date,$send_mail));
 
-			$total_early += $early;
-			
-			foreach($records as $record){
-				if($record->clock_in >= $my_shift->out_time && $record->clock_out != null)
-					$overtime += strtotime($record->clock_out) - strtotime($record->clock_in);
-				elseif($record->clock_in < $my_shift->out_time && $record->clock_out > $my_shift->out_time)
-					$overtime += strtotime($record->clock_out) - strtotime($my_shift->out_time);
-			}
-
-			if($overtime){
-				$tag_count[] = 'O';
-				$tag .= Helper::getAttendanceTag('overtime');
-			}
-
-			$total_overtime += $overtime;
-
-			foreach($records as $record)
-				$working += ($record->clock_out != null) ? abs(strtotime($record->clock_out) - strtotime($record->clock_in)) : 0;
-			$total_working += $working;
-
-			$rest = (isset($in) && $out->clock_out != null) ? (abs(strtotime($out->clock_out) - strtotime($in->clock_in)) - $working) : 0;
-			$total_rest += $rest;
-
-			$holiday = $holidays->whereLoose('date',$date)->first();
-
-			if(isset($in)){
-				$attendance = 'P';
-				$attendance_label = '<span class="badge badge-success">'.trans('messages.present').'</span>';
-			} elseif(count($leave_approved) && in_array($date,$leave_approved)){
-				$attendance = 'L';
-				$attendance_label = '<span class="badge badge-warning">'.trans('messages.leave').'</span>';
-			} elseif($holiday){
-				$attendance = 'H';
-				$attendance_label = '<span class="badge badge-info">'.trans('messages.holiday').'</span>';
-			} elseif(!$holiday && $date < date('Y-m-d')){
-				$attendance = 'A';
-				$attendance_label = '<span class="badge badge-danger">'.trans('messages.absent').'</span>';
-			} else {
-				$attendance = '';
-				$attendance_label = '';
-			}
-
-			$cols_summary[$date] = $attendance;
-			$date = date('Y-m-d',strtotime($date . ' +1 days'));
-	    }
-
-	  	$summary['total_late'] = Helper::showDuration($total_late);
-	  	$summary['total_early'] = Helper::showDuration($total_early);
-	  	$summary['total_working'] = Helper::showDuration($total_working);
-	  	$summary['total_rest'] = Helper::showDuration($total_rest);
-	  	$summary['total_overtime'] = Helper::showDuration($total_overtime);
-
-	  	$cols_summary = array_count_values($cols_summary);
-        $tag_summary = array_count_values($tag_count);
-	  	
-	  	$att_summary['A'] = array_key_exists('A', $cols_summary) ? $cols_summary['A'] : 0;
-	  	$att_summary['H'] = array_key_exists('H', $cols_summary) ? $cols_summary['H'] : 0;
-	  	$att_summary['P'] = array_key_exists('P', $cols_summary) ? $cols_summary['P'] : 0;
-	    $att_summary['L'] = array_key_exists('L', $cols_summary) ? $cols_summary['L'] : 0;
-	    $att_summary['Late'] = array_key_exists('L', $tag_summary) ? $tag_summary['L'] : 0;
-	    $att_summary['Early'] = array_key_exists('E', $tag_summary) ? $tag_summary['E'] : 0;
-	    $att_summary['Overtime'] = array_key_exists('O', $tag_summary) ? $tag_summary['O'] : 0;
-	  	$att_summary['W'] = $att_summary['H'] + $att_summary['P'];
-
-	  	return ['summary' => $summary,'att_summary' => $att_summary];
+		if($request->has('ajax_submit')){
+		    $response = ['message' => trans('messages.request_submit'), 'status' => 'success']; 
+		    return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+		}
+		return redirect('/dashboard')->withSuccess(trans('messages.request_submit'));
 	}
 
 	public function generate($action = 'print' , $payroll_slip_id){
@@ -368,12 +445,20 @@ Class PayrollController extends Controller{
 		if(!$this->employeeAccessible($user) && $payroll_slip->user_id != Auth::user()->id)
 			return redirect('/payroll')->withErrors(trans('messages.invalid_link'));
 
-    	$payroll = Payroll::join('payroll_slip','payroll_slip.id','=','payroll.payroll_slip_id')
-    		->where('payroll_slip_id','=',$payroll_slip_id)->get()
-        	->pluck('amount','salary_type_id')->all();
+		$payroll = $payroll_slip->Payroll->pluck('amount','salary_type_id')->all();
 
+        $contract = Helper::getContract($user->id,$payroll_slip->from_date);
+
+        $leave_types = \App\LeaveType::all();
     	$earning_salary_types = SalaryType::where('salary_type','=','earning')->get();
    	 	$deduction_salary_types = SalaryType::where('salary_type','=','deduction')->get();
+		$summary_data = $this->getAttendanceSummary($user,$payroll_slip->from_date,$payroll_slip->to_date);
+		$summary = $summary_data['summary'];
+		$att_summary = $summary_data['att_summary'];
+
+      	$leave_data = $this->getLeaveBalance($user,$payroll_slip->from_date);
+      	$used = $leave_data['used'];
+      	$allotted = $leave_data['allotted'];
 
    	 	$data = [
    	 		'user' => $user,
@@ -382,7 +467,13 @@ Class PayrollController extends Controller{
    	 		'deduction_salary_types' => $deduction_salary_types,
    	 		'payroll_slip' => $payroll_slip,
    	 		'total_earning' => 0,
-   	 		'total_deduction' => 0
+   	 		'total_deduction' => 0,
+   	 		'summary' => $summary,
+   	 		'att_summary' => $att_summary,
+   	 		'used' => $used,
+   	 		'leave_types' => $leave_types,
+   	 		'allotted' => $allotted,
+   	 		'contract' => $contract
    	 		];
 
    	 	if($action == 'mail'){
@@ -428,12 +519,30 @@ Class PayrollController extends Controller{
 		if(!$payroll_slip || !$this->employeeAccessible($user) && $payroll_slip->user_id != Auth::user()->id)
             return view('common.error',['message' => trans('messages.permission_denied')]);
 
-    	$payroll = Payroll::join('payroll_slip','payroll_slip.id','=','payroll.payroll_slip_id')
-    		->where('payroll_slip_id','=',$payroll_slip->id)->get()
-        	->pluck('amount','salary_type_id')->all();
+        $payrolls = $payroll_slip->Payroll->pluck('amount','salary_type_id')->all();
+
 	    $earning_salary_types = SalaryType::where('salary_type','=','earning')->get();
 	    $deduction_salary_types = SalaryType::where('salary_type','=','deduction')->get();
-        return view('payroll.edit',compact('payroll_slip','earning_salary_types','deduction_salary_types','payroll'));
+		$custom_field_values = Helper::getCustomFieldValues($this->form,$payroll_slip->id);
+
+		$salary_values = array();
+
+		foreach($earning_salary_types as $earning_salary_type)
+			$salary_values[$earning_salary_type->id] = 0;
+		foreach($deduction_salary_types as $deduction_salary_type)
+			$salary_values[$deduction_salary_type->id] = 0;
+
+		foreach($payrolls as $key => $payroll){
+			$salary_values[$key] = ($payroll_slip->hourly_payroll) ? 0 : (round($payroll,config('config.currency_decimal')));
+		}
+
+		$hourly_payroll = $payroll_slip->hourly_payroll;
+		$hourly = round($payroll_slip->hourly,config('config.currency_decimal'));
+		$late = (!$payroll_slip->hourly_payroll) ? round($payroll_slip->late,config('config.currency_decimal')) : 0;
+		$overtime = (!$payroll_slip->hourly_payroll) ? round($payroll_slip->overtime,config('config.currency_decimal')) : 0;
+		$early_leaving = (!$payroll_slip->hourly_payroll) ? round($payroll_slip->early_leaving,config('config.currency_decimal')) : 0;
+
+        return view('payroll.edit',compact('payroll_slip','earning_salary_types','deduction_salary_types','payroll','custom_field_values','salary_values','hourly','late','overtime','hourly_payroll','early_leaving'));
 	}
 
 	public function update(Request $request, $id){
@@ -466,6 +575,12 @@ Class PayrollController extends Controller{
 		$salary_types = SalaryType::all();
 
 		$payroll_slip = PayrollSlip::firstOrNew(['id' => $id]);
+		$payroll_slip->hourly_payroll = ($request->has('hourly_payroll')) ? 1 : 0;
+		$payroll_slip->hourly = ($request->has('hourly_payroll')) ? $request->input('hourly') : 0;
+		$payroll_slip->late = (!$request->has('hourly_payroll')) ? $request->input('late') : 0;
+		$payroll_slip->overtime = (!$request->has('hourly_payroll')) ? $request->input('overtime') : 0;
+		$payroll_slip->early_leaving = (!$request->has('hourly_payroll')) ? $request->input('early_leaving') : 0;
+
 		if($request->has('employee_contribution'))
 	    $payroll_slip->employee_contribution = $request->input('employee_contribution');
 		if($request->has('employer_contribution'))
@@ -481,7 +596,7 @@ Class PayrollController extends Controller{
 				));
 			$salary->payroll_slip_id = $payroll_slip->id;
 			$salary->salary_type_id = $salary_type->id;
-			$salary->amount = $request->input($salary_type->id);
+			$salary->amount = (!$request->has('hourly_payroll')) ? $request->input($salary_type->id) : 0;
 			$salary->save();
 		}
 		$data = $request->all();
@@ -557,6 +672,12 @@ Class PayrollController extends Controller{
 		$payroll_slip->user_id = $request->input('user_id');
 		$payroll_slip->from_date = $request->input('from_date');
 		$payroll_slip->to_date = $request->input('to_date');
+		$payroll_slip->hourly_payroll = ($request->has('hourly_payroll')) ? 1 : 0;
+		$payroll_slip->hourly = ($request->has('hourly_payroll')) ? $request->input('hourly') : 0;
+		$payroll_slip->late = (!$request->has('hourly_payroll')) ? $request->input('late') : 0;
+		$payroll_slip->overtime = (!$request->has('hourly_payroll')) ? $request->input('overtime') : 0;
+		$payroll_slip->early_leaving = (!$request->has('hourly_payroll')) ? $request->input('early_leaving') : 0;
+
 		if($request->has('employee_contribution'))
 	    $payroll_slip->employee_contribution = $request->input('employee_contribution');
 		if($request->has('employer_contribution'))
@@ -572,13 +693,13 @@ Class PayrollController extends Controller{
 				));
 			$salary->payroll_slip_id = $payroll_slip->id;
 			$salary->salary_type_id = $salary_type->id;
-			$salary->amount = $request->input($salary_type->id);
+			$salary->amount = (!$request->has('hourly_payroll')) ? $request->input($salary_type->id) : 0;
 			$salary->save();
 		}
 		$data = $request->all();
 		Helper::storeCustomField($this->form,$payroll_slip->id, $data);
 
-	    $this->logActivity(['module' => 'payroll','unique_id' => $payroll_slip->id,'activity' => 'activity_updated']);
+	    $this->logActivity(['module' => 'payroll','unique_id' => $payroll_slip->id,'activity' => 'activity_generated']);
 	    
 		if($request->has('ajax_submit')){
 		  	$response = ['message' => trans('messages.payroll').' '.trans('messages.saved'), 'status' => 'success']; 

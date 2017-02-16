@@ -27,7 +27,7 @@ Class OfficeShiftController extends Controller{
 				<td>'.$office_shift->name.' '.(($office_shift->is_default) ? '<span class="badge badge-success">1</span>' : '').'</td>
 				<td>
 					<div class="btn-group btn-group-xs">'.((!$office_shift->is_default) ?
-					'<a href="/office-shift/'.$office_shift->id.'/default" class="btn btn-xs btn-default"><i class="fa fa-clock-o" data-toggle="tooltip" title="'.trans('messages.make_default').'"></i></a>' : '').
+					'<a href="#" data-ajax="1" data-source="/office-shift/change-default" data-extra="&id='.$office_shift->id.'" data-table-alter="office-shift-table" class="btn btn-xs btn-default"><i class="fa fa-clock-o" data-toggle="tooltip" title="'.trans('messages.make_default').'"></i></a>' : '').
 					'<a href="#" data-href="/office-shift/'.$office_shift->id.'/edit" class="btn btn-xs btn-default" data-toggle="modal" data-target="#myModal"> <i class="fa fa-edit" data-toggle="tooltip" title="'.trans('messages.edit').'"></i></a>'.
 					delete_form(['office-shift.destroy',$office_shift->id],'office_shift','1').'
 					</div>
@@ -117,8 +117,8 @@ Class OfficeShiftController extends Controller{
 		return redirect('/configuration#office-shift')->withSuccess(trans('messages.office_shift').' '.trans('messages.added'));		
 	}
 
-	public function makeDefault($id){
-		$office_shift = OfficeShift::find($id);
+	public function changeDefault(Request $request){
+		$office_shift = OfficeShift::find($request->input('id'));
 
 		if(!$office_shift){
 			if(isset($request) && $request->has('ajax_submit')){
@@ -145,8 +145,7 @@ Class OfficeShiftController extends Controller{
 		$this->logActivity(['module' => 'office_shift','unique_id' => $office_shift->id,'activity' => 'activity_made_default']);
 		
         if(isset($request) && $request->has('ajax_submit')){
-        	$data = $this->lists();
-	        $response = ['message' => trans('messages.office_shift').' '.trans('messages.made_default'), 'status' => 'success','data' => $data]; 
+	        $response = ['message' => trans('messages.office_shift').' '.trans('messages.made_default'), 'status' => 'success']; 
 	        return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	    }
 

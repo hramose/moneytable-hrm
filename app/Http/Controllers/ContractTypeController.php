@@ -70,8 +70,7 @@ Class ContractTypeController extends Controller{
 		$this->logActivity(['module' => 'contract_type','unique_id' => $contract_type->id,'activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
-        	$data = $this->lists();
-	        $response = ['message' => trans('messages.contract_type').' '.trans('messages.updated'), 'status' => 'success','data' => $data]; 
+	        $response = ['message' => trans('messages.contract_type').' '.trans('messages.updated'), 'status' => 'success']; 
 	        return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	    }
 

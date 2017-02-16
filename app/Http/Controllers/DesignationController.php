@@ -13,7 +13,6 @@ Class DesignationController extends Controller{
 	protected $form = 'designation-form';
 
 	public function index(Designation $designation){
-
 		if(!Entrust::can('list_designation'))
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
@@ -43,6 +42,20 @@ Class DesignationController extends Controller{
 		return view('designation.index',compact('col_heads','table_info','top_designations','departments'));
 	}
 
+	public function hierarchy(Request $request){
+
+        $tree = array();
+        $designations = \App\Designation::all();
+        foreach ($designations as $designation){
+            $tree[$designation->id] = array(
+                'parent_id' => $designation->top_designation_id,
+                'name' => $designation->full_designation
+            );
+        }
+
+        return view('designation.hierarchy',compact('tree'))->render();
+	}
+
 	public function lists(Request $request){
 		if(!Entrust::can('list_designation'))
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
@@ -65,7 +78,7 @@ Class DesignationController extends Controller{
 				(Entrust::can('edit_designation') ? '<a href="#" data-href="/designation/'.$designation->id.'/edit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#myModal"> <i class="fa fa-edit" data-toggle="tooltip" title="'.trans('messages.edit').'"></i></a> ' : '').
 				(Entrust::can('delete_designation') ? delete_form(['designation.destroy',$designation->id],'designation',1) : '').
 				'</div>',
-				$designation->name.' '.(($designation->is_hidden) ? '<span class="label label-danger">'.trans('messages.default').'</span>' : ''),
+				$designation->name.' '.(($designation->is_hidden) ? '<span class="label label-danger">'.trans('messages.default').'</span>' : '').(($designation->is_default) ? '<span class="label label-warning">'.trans('messages.user').' '.trans('messages.default').'</span>' : ''),
 				$designation->Department->name,
 				($designation->top_designation_id) ? $designation->Parent->full_designation : '<i class="fa fa-times"></i>'
 			);
@@ -125,6 +138,12 @@ Class DesignationController extends Controller{
 		$data['top_designation_id'] = ($request->input('top_designation_id')) ? : null;
 		$designation->fill($data)->save();
 
+        if($request->has('is_default')){
+        	\App\Designation::whereNotNull('id')->update(['is_default' => 0]);
+        	$designation->is_default = 1;
+        	$designation->save();
+        }
+
 		Helper::storeCustomField($this->form,$designation->id, $data);
 
 		$this->logActivity(['module' => 'designation','unique_id' => $designation->id,'activity' => 'activity_added']);
@@ -170,6 +189,12 @@ Class DesignationController extends Controller{
 
 		$designation->fill($data)->save();
 
+        if($request->has('is_default')){
+        	\App\Designation::whereNotNull('id')->update(['is_default' => 0]);
+        	$designation->is_default = 1;
+        	$designation->save();
+        }
+        
 		$this->logActivity(['module' => 'designation','unique_id' => $designation->id,'activity' => 'activity_updated']);
 
 		Helper::updateCustomField($this->form,$designation->id, $data);

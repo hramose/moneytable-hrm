@@ -19,8 +19,10 @@ Class ApiController extends Controller{
     	if(!$user->can('list_employee'))
     		return response()->json(['error' => 'You don\'t have permission to list employee.']);
 
-    	if($user->can('manage_all_employee'))
-    		$users = \App\User::all();
+        if($user->hasRole(DEFAULT_ROLE))
+            $users = \App\User::all();
+    	elseif($user->can('manage_all_employee'))
+    		$users = \App\User::whereIsHidden(0)->get();
     	elseif($user->can('manage_subordinate_employee')){
           	$childs = Helper::childDesignation($user->designation_id,1);
           	$users = \App\User::whereIn('designation_id',$childs)->get();

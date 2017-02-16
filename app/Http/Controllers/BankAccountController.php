@@ -23,13 +23,16 @@ Class BankAccountController extends Controller{
 				'<td>'.$bankAccount->account_number.'</td>'.
 				'<td>'.$bankAccount->bank_name.'</td>'.
 				'<td>'.$bankAccount->bank_code.'</td>'.
-				'<td>'.$bankAccount->bank_branch.'</td>'.
-				'<td><div class="btn-group btn-group-xs">
+				'<td>'.$bankAccount->bank_branch.'</td>';
+
+				if(config('config.employee_manage_own_bank_account') || $request->has('show_option')){
+					$data .= '<td><div class="btn-group btn-group-xs">
 					<a href="#" data-href="/bank-account/'.$bankAccount->id.'/edit" class="btn btn-xs btn-default" data-toggle="modal" data-target="#myModal" ><i class="fa fa-edit" data-toggle="tooltip" title="'.trans('messages.edit').'"></i></a>'.
 					delete_form(['bank-account.destroy',$bankAccount->id]).
-				'</div>
-				</td>
-			</tr>';
+					'</div>
+					</td>';
+				}
+			$data .= '</tr>';
 		}
 
 		return $data;
@@ -59,7 +62,10 @@ Class BankAccountController extends Controller{
           		->update(['is_primary' => 0]);
 
         $bank_account = new BankAccount;
-	    $bank_account->fill($request->all());
+        $data = $request->all();
+        $data['is_primary'] = ($request->has('is_primary')) ? 1 : 0;
+        $bank_account->fill($data)->save();
+        
         $employee->bankAccount()->save($bank_account);
         $this->logActivity(['module' => 'bank_account','unique_id' => $bank_account->id,'activity' => 'activity_added','secondary_id' => $employee->id]);
 
@@ -82,6 +88,7 @@ Class BankAccountController extends Controller{
 	}
 
 	public function update(BankAccountRequest $request, BankAccount $bank_account){
+
 		$id = $bank_account->User->id;
 		$employee = User::find($id);
 		
@@ -97,7 +104,10 @@ Class BankAccountController extends Controller{
         	\App\BankAccount::where('user_id', $id)
           		->update(['is_primary' => 0]);
 
-        $bank_account->fill($request->all())->save();
+        $data = $request->all();
+        $data['is_primary'] = ($request->has('is_primary')) ? 1 : 0;
+        $bank_account->fill($data)->save();
+
         $this->logActivity(['module' => 'bank_account','unique_id' => $bank_account->id,'activity' => 'activity_updated','secondary_id' => $employee->id]);
 
         if($request->has('ajax_submit')){

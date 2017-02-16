@@ -77,7 +77,7 @@ Class ClockController extends Controller{
 
 		$data = array();
 		$data['module'] = 'clock';
-		$data['activity'] = 'activity_clock_in';
+		$data['activity'] = 'activity_clocked_in';
 		$data['user_id'] = $user_id;
     	$data['ip'] = \Request::getClientIp();
     	$activity = \App\Activity::create($data);
@@ -166,7 +166,7 @@ Class ClockController extends Controller{
 
 		$data = array();
 		$data['module'] = 'clock';
-		$data['activity'] = 'activity_clock_in';
+		$data['activity'] = 'activity_clocked_out';
 		$data['user_id'] = $user_id;
     	$data['ip'] = \Request::getClientIp();
     	$activity = \App\Activity::create($data);
@@ -269,44 +269,10 @@ Class ClockController extends Controller{
             return redirect()->back()->withInput()->withErrors(trans('messages.invalid_link'));
         }
 
-		$next_date = date('Y-m-d',strtotime($date.' +1 days'));
-
-        $shift = Helper::getShift($date,$user_id);
-       	$next_date_shift = Helper::getShift($next_date);
-
 		$clock_in = date('Y-m-d H:i',strtotime($request->input('clock_in')));
 		$clock_out = ($request->input('clock_out')) ? date('Y-m-d H:i',strtotime($request->input('clock_out'))) : null;
 
-		$query1 = Clock::whereUserId($user_id)->where('date','=',$date)->where('clock_in','<=',$clock_in)->where('clock_out','>=',$clock_in);
-		if($clock_out)
-		$query2 = Clock::whereUserId($user_id)->where('date','=',$date)->where('clock_in','<=',$clock_out)->where('clock_out','>=',$clock_out);
-
-		if($clock_id){
-			$query1->where('id','!=',$clock_id);
-			if($clock_out)
-			$query2->where('id','!=',$clock_id);
-		}
-
-		$clock_in_count = $query1->count();
-		if($clock_out)
-		$clock_out_count = $query2->count();
-
-		if($clock_in < $date)
-	        $response = ['message' => trans('messages.clock_in_less_than_current_date'), 'status' => 'error']; 
-		elseif(!$shift->overnight && $clock_in >= $next_date)
-	        $response = ['message' => trans('messages.clock_in_greater_than_current_date'), 'status' => 'error']; 
-		elseif($shift->overnight && $clock_in >= $next_date.' '.$next_date_shift->in_time)
-	        $response = ['message' => trans('messages.clock_in_greater_than_current_date_overtime'), 'status' => 'error'];
-		elseif($clock_in_count > 0)
-	        $response = ['message' => trans('messages.clock_in_between_time'), 'status' => 'error']; 
-		elseif($clock_out && $clock_out_count)
-	        $response = ['message' => trans('messages.clock_out_between_time'), 'status' => 'error'];
-		elseif($clock_out && $clock_in > $clock_out)
-	        $response = ['message' => trans('messages.out_time_not_less_than_in_time'), 'status' => 'error'];
-    	elseif($clock_out && !$shift->overnight && $clock_out >= $next_date)
-	        $response = ['message' => trans('messages.clock_out_greater_than_current_date'), 'status' => 'error'];
-    	elseif($clock_out && $shift->overnight && $clock_out >= $next_date.' '.$next_date_shift->in_time)
-	        $response = ['message' => trans('messages.clock_out_greater_than_current_date_overtime'), 'status' => 'error'];
+		$response = $this->validateClock($clock_in,$clock_out,$user_id,$date,$clock_id);
 
     	if(isset($response) && $response['status'] == 'error'){
     		if($request->has('ajax_submit'))
@@ -325,6 +291,8 @@ Class ClockController extends Controller{
         $clock->clock_out = $clock_out;
         $clock->save();
 
+        $this->logActivity(['module' => 'clock','unique_id' => $clock->id,'activity' => 'activity_updated']);
+
 		if($request->has('ajax_submit')){
 			$clocks = Clock::where('date','=',$date)->whereUserId($user_id)->orderBy('clock_in')->get();
 			$data = '';
@@ -340,10 +308,59 @@ Class ClockController extends Controller{
 					</td>
 				</tr>';
 			}
-            $response = ['message' => trans('messages.saved'), 'status' => 'success','data' => $data]; 
+            $response = ['message' => trans('messages.attendance').' '.trans('messages.updated'), 'status' => 'success','data' => $data]; 
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
         }
-		return redirect()->back()->withSuccess(trans('messages.saved'));
+		return redirect()->back()->withSuccess(trans('messages.attendance').' '.trans('messages.updated'));
+	}
+
+	public function validateClock($clock_in,$clock_out,$user_id,$date,$clock_id){
+
+		$next_date = date('Y-m-d',strtotime($date.' +1 days'));
+
+        $shift = Helper::getShift($date,$user_id);
+       	$next_date_shift = Helper::getShift($next_date);
+
+		$query1 = Clock::whereUserId($user_id)->where('date','=',$date)->where('clock_in','<=',$clock_in)->where('clock_out','>=',$clock_in);
+		if($clock_out)
+		$query2 = Clock::whereUserId($user_id)->where('date','=',$date)->where('clock_in','<=',$clock_out)->where('clock_out','>=',$clock_out);
+
+		if($clock_id){
+			$query1->where('id','!=',$clock_id);
+			if($clock_out)
+			$query2->where('id','!=',$clock_id);
+		}
+
+		$clock_in_count = $query1->count();
+		if($clock_out)
+		$clock_out_count = $query2->count();
+
+		if($clock_out){
+	    	$in_out_clock = Clock::whereUserId($user_id)->where('clock_in','>=',$clock_in)->where('clock_in','<=',$clock_out)->count();
+		}
+
+		if($clock_in < $date)
+	        $response = ['message' => trans('messages.clock_in_less_than_current_date'), 'status' => 'error']; 
+		elseif(!$shift->overnight && $clock_in >= $next_date)
+	        $response = ['message' => trans('messages.clock_in_greater_than_current_date'), 'status' => 'error']; 
+		elseif($shift->overnight && $clock_in >= $next_date.' '.$next_date_shift->in_time)
+	        $response = ['message' => trans('messages.clock_in_greater_than_current_date_overtime'), 'status' => 'error'];
+		elseif($clock_in_count > 0)
+	        $response = ['message' => trans('messages.clock_in_between_time'), 'status' => 'error']; 
+	    elseif($clock_out && $in_out_clock)
+	        $response = ['message' => trans('messages.clock_in_clock_out_outside_time'), 'status' => 'error']; 
+		elseif($clock_out && $clock_out_count)
+	        $response = ['message' => trans('messages.clock_out_between_time'), 'status' => 'error'];
+		elseif($clock_out && $clock_in > $clock_out)
+	        $response = ['message' => trans('messages.out_time_not_less_than_in_time'), 'status' => 'error'];
+    	elseif($clock_out && !$shift->overnight && $clock_out >= $next_date)
+	        $response = ['message' => trans('messages.clock_out_greater_than_current_date'), 'status' => 'error'];
+    	elseif($clock_out && $shift->overnight && $clock_out >= $next_date.' '.$next_date_shift->in_time)
+	        $response = ['message' => trans('messages.clock_out_greater_than_current_date_overtime'), 'status' => 'error'];
+	    else
+	    	$response = ['status' => 'success'];
+
+	    return $response;
 	}
 
 	public function attendance(){
@@ -384,8 +401,10 @@ Class ClockController extends Controller{
 
 		$date = ($request->input('date')) ? : date('Y-m-d');
 
-		if(Entrust::can('manage_all_employee'))
-			$users = User::all();
+        if(defaultRole())
+        	$users = \App\User::all();
+        elseif(Entrust::can('manage_all_employee'))
+        	$users = \App\User::whereIsHidden(0)->get();
 		elseif(Entrust::can('manage_subordinate_employee')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
@@ -590,8 +609,10 @@ Class ClockController extends Controller{
 
 	public function dateWiseAttendance(){
 
-		if(Entrust::can('manage_all_employee'))
+        if(defaultRole())
 			$users = User::all()->pluck('full_name_with_designation','id')->all();
+        elseif(Entrust::can('manage_all_employee'))
+        	$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_employee')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
@@ -900,8 +921,10 @@ Class ClockController extends Controller{
         $raw_data = array();
         $raw_data2 = array();
 
-		if(Entrust::can('manage_all_employee'))
+        if(defaultRole())
 			$users = User::all();
+		elseif(Entrust::can('manage_all_employee'))
+			$users = User::whereIsHidden(0)->get();
 		elseif(Entrust::can('manage_subordinate_employee')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
@@ -1084,6 +1107,7 @@ Class ClockController extends Controller{
 
 		$user_id = ($request->input('user_id')) ? : Auth::user()->id;
 		$date = ($request->input('date')) ? : date('Y-m-d');
+		$default_datetimepicker_date = $date;
 
 		if(config('config.auto_lock_attendance_days') && $date < date('Y-m-d',strtotime(date('Y-m-d') . ' -'.config('config.auto_lock_attendance_days').' days')) && !defaultRole())
 			return redirect()->back()->withErrors(trans('messages.attendance_locked'));
@@ -1112,8 +1136,10 @@ Class ClockController extends Controller{
 		if(!Entrust::can('update_attendance'))
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
-		if(Entrust::can('manage_all_employee'))
+		if(defaultRole())
 			$users = User::all()->pluck('full_name_with_designation','id')->all();
+		if(Entrust::can('manage_all_employee'))
+			$users = User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_employee')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
@@ -1155,70 +1181,137 @@ Class ClockController extends Controller{
 
         $assets = ['timepicker'];
         $menu = ['attendance','update_attendance'];
-        return view('employee.update_attendance',compact('users','assets','user','date','clocks','my_shift','menu','label'));
+        return view('employee.update_attendance',compact('users','assets','user','date','clocks','my_shift','menu','label','default_datetimepicker_date'));
 	}
 
-	public function uploadAttendance(AttendanceUploadRequest $request){
-		
+	public function uploadAttendance(Request $request){
+
 		if(!Entrust::can('upload_attendance'))
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
 		$filename = uniqid();
 		$extension = $request->file('file')->getClientOriginalExtension();
-	 	$file = $request->file('file')->move('uploads/attendance',$filename.".".$extension);
-	 	$filename_extension = 'uploads/attendance/'.$filename.'.'.$extension;
-		$xls_datas = Excel::load($filename_extension, function($reader) { })->toArray();
+
+		$allowed_file_types = ['csv'];
+		if(!in_array($extension, $allowed_file_types))
+			return redirect('/dashboard')->withErrors('Only '.implode(',',$allowed_file_types).' file types are allowed.');
+
+	 	$file = $request->file('file')->move(config('constants.upload_path.attendance'),$filename.".".$extension);
+	 	$filename_extension = config('constants.upload_path.attendance').$filename.'.'.$extension;
+
+        include('../app/Classes/ExcelReader/SpreadsheetReader.php');
+        include('../app/Classes/ExcelReader/php-excel-reader/excel_reader2.php');
+
+        $xls_datas = array();
+        $Reader = new \SpreadsheetReader($filename_extension);
+    	foreach ($Reader as $key => $row)
+			$xls_datas[] = array(
+				'employee_code' => $row[0],
+				'date' => $row[1],
+				'clock_in' => ($row[2] && $row[3]) ? $row[2].' '.$row[3] : '',
+				'clock_out' => ($row[4] && $row[5]) ? $row[4].' '.$row[5] : '',
+				);
+
+		if(!count($xls_datas)){
+			if (File::exists($filename_extension))
+				File::delete($filename_extension);
+			return redirect('/dashboard')->withErrors(trans('messages.no_data_found'));
+		} elseif (count($xls_datas) > 1000)
+			return redirect('/dashboard')->withErrors('Max 1000 records can be imported at a time.');
+
+		$clock_upload = new \App\ClockUpload;
+		$clock_upload->user_id = Auth::user()->id;
+		$clock_upload->filename = $filename.'.'.$extension;
+		$clock_upload->total = count($xls_datas);
+		$clock_upload->save();
+
+		$employees = \App\Profile::all()->pluck('user_id','employee_code')->all();
+		$clock_id = null;
 		if(count($xls_datas) > 0)
 		{
-			$employees = User::join('profile','profile.user_id','=','users.id')
-				->select(DB::raw('users.id AS user_id,employee_code'))
-				->pluck('user_id','employee_code')->all();
-
 		    $data = array();
+		    $data_fails = array();
 		    foreach($xls_datas as $xls_data)
 		    {
 		      $employee_code = $xls_data['employee_code'];
+
 		      $user_id = (isset($employees[$employee_code])) ? $employees[$employee_code] : NULL;
 		      $date = date('Y-m-d',strtotime($xls_data['date']));
 		      $clock_in = date('Y-m-d H:i',strtotime($xls_data['clock_in']));
-		      $clock_out = date('Y-m-d H:i',strtotime($xls_data['clock_out']));
-		      
-		      $clock = Clock::where('user_id','=',$user_id)
-		      	->where('date','=',$date)
-		      	->where(function ($query) use($clock_in) {
-		      		$query->where('clock_out','=',null)
-		      		->orWhere('clock_out','>=',$clock_in);
-		      		})->count();
+		      $clock_out = ($xls_data['clock_out']) ? date('Y-m-d H:i',strtotime($xls_data['clock_out'])) : NULL;
 
-		      if($user_id != null && !$clock && strtotime($clock_in) < strtotime($clock_out))
-		      $data[] = array(
-		      		'user_id' => $user_id,
-		      		'date' => $date,
-		      		'clock_in' => $clock_in,
-		      		'clock_out' => $clock_out,
-		      		'created_at' => date('Y-m-d H:i:s'),
-		      		'updated_at' => date('Y-m-d H:i:s')
+		      $response = $this->validateClock($clock_in,$clock_out,$user_id,$date,$clock_id);
+
+		      	if($user_id != null && $response['status'] == 'success')
+		      		$data[] = array(
+			      		'user_id' => $user_id,
+			      		'date' => $date,
+			      		'clock_in' => $clock_in,
+			      		'clock_out' => $clock_out
 		      		);
+		  		else
+		  			$data_fails[] = array(
+		  				'clock_upload_id' => $clock_upload->id,
+		  				'employee_code' => $employee_code,
+		  				'date' => $date,
+		  				'clock_in' => $clock_in,
+		      			'clock_out' => $clock_out
+		  			);
+
 		    }
 		    if(count($data))
 		    	Clock::insert($data);
-		}
-		if (File::exists($filename_extension))
-			File::delete($filename_extension);
+		    if(count($data_fails))
+		    	\App\ClockFail::insert($data_fails);
 
-		return redirect('/dashboard')->withSuccess(count($data).' '.trans('messages.attendance_upload').' '.trans('messages.out_of').' '.count($xls_datas).' '.trans('messages.attendance'));
+		    $clock_upload->uploaded = count($data);
+		    $clock_upload->rejected = count($data_fails);
+		    $clock_upload->save();
+		}
+
+		if(count($data))
+			$this->logActivity(['module' => 'clock','unique_id' => $clock_upload->id,'activity' => 'activity_uploaded']);
+
+
+		return redirect('/dashboard')->withSuccess(count($data).' '.trans('messages.attendance').' '.trans('messages.uploaded').' '.trans('messages.out_of').' '.count($xls_datas).' '.trans('messages.attendance'));
 	}
 
-	public function shift(Request $request){
+	public function shift($user_id = null){
+
+		$user_id = ($user_id) ? : Auth::user()->id;
+
+		$user = \App\User::find($user_id);
+
+		if(!$user || !$this->employeeAccessible($user))
+			return redirect('/shift-detail');
+
+		if(defaultRole())
+			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_employee'))
+			$users = \App\User::whereIsHidden(0)->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_subordinate_employee')){
+			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
+			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
+			array_push($child_users, Auth::user()->id);
+        	$users = \App\User::whereIn('id',$child_users)->get()->pluck('full_name_with_designation','id')->all();
+		} else
+			$users = \App\User::whereId(Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();
+
+		$locations = \App\Location::all()->pluck('name','id')->all();
+        $office_shifts = \App\OfficeShift::all()->pluck('name','id')->all();
 
         $col_heads = array(
         		trans('messages.employee'),
+        		trans('messages.date'),
         		trans('messages.shift_name'),
         		trans('messages.clock_in'),
-        		trans('messages.clock_out')
+        		trans('messages.clock_out'),
+        		trans('messages.duration'),
+        		trans('messages.location')
 				);
 
-        $date = ($request->input('date')) ? : date('Y-m-d');
+        $from_date = date('Y-m-d');
+        $to_date = date('Y-m-d');
 
         $menu = ['attendance','shift_detail'];
         $table_info = array(
@@ -1228,7 +1321,7 @@ Class ClockController extends Controller{
 			'form' => 'shift_detail'
 		);
 
-		return view('employee.shift_detail',compact('col_heads','date','menu','table_info'));
+		return view('employee.shift_detail',compact('col_heads','from_date','menu','table_info','users','to_date','locations','user','office_shifts'));
 	}
 
 	public function postShift(Request $request){
@@ -1238,35 +1331,67 @@ Class ClockController extends Controller{
 
 	public function shiftDetailList(Request $request){
 
-        $date = ($request->input('date')) ? : date('Y-m-d');
-		if(Entrust::can('manage_all_employee'))
-			$users = \App\User::all();
-		elseif(Entrust::can('manage_subordinate_employee')){
-			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
-			$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
-			array_push($child_users, Auth::user()->id);
-        	$users = \App\User::whereIn('id',$child_users)->get();
-		} else
-			$users = \App\User::whereId(Auth::user()->id)->get();
+        $from_date = ($request->input('from_date')) ? : date('Y-m-d');
+        $to_date = ($request->input('to_date')) ? : date('Y-m-d');
+
+        if($request->has('user_id'))
+        	$users = \App\User::whereId($request->input('user_id'))->get();
+		else{
+			if(defaultRole())
+				$users = \App\User::all();
+			elseif(Entrust::can('manage_all_employee'))
+				$users = \App\User::whereIsHidden(0)->get();
+			elseif(Entrust::can('manage_subordinate_employee')){
+				$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
+				$child_users = User::whereIn('designation_id',$child_designations)->pluck('id')->all();
+				array_push($child_users, Auth::user()->id);
+	        	$users = \App\User::whereIn('id',$child_users)->get();
+			} else
+				$users = \App\User::whereId(Auth::user()->id)->get();
+		}
 
 		$rows = array();
+		$row = array();
+
+		$location = ($request->has('location_id')) ? \App\Location::find($request->input('location_id')) : null;
 
         foreach($users as $user){
-        	$my_shift = Helper::getShift($date,$user->id);
-        	$rows[] = array(
-        			$user->full_name_with_designation,
-        			$my_shift->OfficeShift->name,
-        			($my_shift->in_time != $my_shift->out_time) ? showTime($my_shift->in_time) : '-',
-        			($my_shift->in_time != $my_shift->out_time) ? showTime($my_shift->out_time) : '-'
-        			);
+        	$date = $from_date;
+        	while($date <= $to_date){
+	        	$my_shift = Helper::getShift($date,$user->id);
+
+	        	$in_time = $date.' '.$my_shift->in_time;
+	        	if($my_shift->overnight)
+	        		$out_time = date('Y-m-d',strtotime($date . ' +1 days')).' '.$my_shift->out_time;
+	        	else
+        			$out_time = $date.' '.$my_shift->out_time;
+
+        		$duration = strtotime($out_time) - strtotime($in_time);
+        		$duration = ($duration) ? Helper::showDetailDuration($duration) : '-';
+
+	        	$my_location = Helper::getLocation($date,$user->id);
+
+	        	if(!$location || ($location && $location->name == $my_location))
+	        	$rows[] = array(
+	    			'<a href="/shift-detail/'.$user->id.'">'.$user->full_name_with_designation.'</a>',
+	    			showDate($date),
+	    			$my_shift->OfficeShift->name,
+	    			($my_shift->in_time != $my_shift->out_time) ? showTime($my_shift->in_time) : '-',
+	    			($my_shift->in_time != $my_shift->out_time) ? showTime($my_shift->out_time) : '-',
+	    			$duration,
+	    			$my_location
+    			);
+				$date = date('Y-m-d',strtotime($date . ' +1 days'));
+        	}
         }
         $list['aaData'] = $rows;
         return json_encode($list);
 	}
 
 	public function destroy(Clock $clock,Request $request){
+        $this->logActivity(['module' => 'clock','unique_id' => $clock->id,'activity' => 'activity_deleted']);
         $clock->delete();
-
+        
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.attendance').' '.trans('messages.deleted'), 'status' => 'success']; 
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));

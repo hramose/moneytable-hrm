@@ -37,7 +37,8 @@ class ContractRequest extends Request
                     'from_date' => 'required|date|before_equal:to_date',
                     'to_date' => 'required|date',
                     'contract_type_id' => 'required',
-                    'title' => 'required|unique_with:contracts,user_id'
+                    'title' => 'required|unique_with:contracts,user_id',
+                    'new_designation_id' => 'required'
                 ];
             }
             case 'PUT':
@@ -47,6 +48,7 @@ class ContractRequest extends Request
                     'from_date' => 'required|date|before_equal:to_date',
                     'to_date' => 'required|date',
                     'contract_type_id' => 'required',
+                    'new_designation_id' => 'required',
                     'title' => 'required|unique_with:contracts,user_id,'.$contract->id
                 ];
             }

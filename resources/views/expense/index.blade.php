@@ -24,9 +24,10 @@
 			@endif
 
 			<div class="col-sm-12">
-				<div class="box-info">
+				<div class="box-info full">
 					<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.expense') !!}
 					<div class="additional-btn">
+						<a href="/expense-statistics"><button class="btn btn-sm btn-primary"><i class="fa fa-bars icon"></i> {!! trans('messages.expense').' '.trans('messages.statistics') !!}</button></a>
 						@if(Entrust::can('create_expense'))
 							<a href="#" data-toggle="collapse" data-target="#box-detail"><button class="btn btn-sm btn-primary"><i class="fa fa-plus icon"></i> {!! trans('messages.add_new') !!}</button></a>
 						@endif

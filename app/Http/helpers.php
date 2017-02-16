@@ -17,6 +17,27 @@ function checkDBConnection(){
 		return false;
 }
 
+function datepickerDefaultDate($date = null){
+    $date = ($date) ? : date('Y-m-d');
+    return array('year' => explode('-',$date)[0],'month' => explode('-',$date)[1],'day' => explode('-',$date)[2]);
+}
+
+function randomString($length,$type = 'token'){
+    if($type == 'password')
+        $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*()_-=+;:,.?";
+    elseif($type == 'username')
+        $chars = "abcdefghijklmnopqrstuvwxyz0123456789";
+    else
+         $chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    $token = substr( str_shuffle( $chars ), 0, $length );
+    return $token;
+}
+
+function menuAvailable($menus,$menu){
+    $menu_item = $menus->whereLoose('name',$menu)->first();
+    return $menu_item->visible;
+}
+
 function menuAttr($menus,$menu){
     $menu_item = $menus->whereLoose('name',$menu)->first();
 
@@ -71,9 +92,27 @@ function installPurchase($purchase_code,$envato_username,$email = ''){
         'purchase_code' => $purchase_code,
         'product_code' => config('constants.item_code'),
         'email' => $email,
+        'api_version' => '2',
         'install_url' => \Request::url()
     );
 	$ch = curl_init($url);
+    curl_setopt_array($ch, array(
+        CURLOPT_URL => $url,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => $postData
+    ));
+    $data = curl_exec($ch);
+    return json_decode($data,true);
+}
+
+function complete($purchase_code){
+    $url = config('constants.path.verifier')."activate";
+    $postData = array(
+        'purchase_code' => $purchase_code,
+        'install_url' => \Request::url()
+    );
+    $ch = curl_init($url);
     curl_setopt_array($ch, array(
         CURLOPT_URL => $url,
         CURLOPT_RETURNTRANSFER => true,

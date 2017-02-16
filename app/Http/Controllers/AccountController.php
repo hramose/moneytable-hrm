@@ -40,12 +40,12 @@ Class AccountController extends Controller{
 	        }
     		return redirect('/update')->withErrors(trans('messages.check_internet_connection'));
     	}
-    	
+
 		$purchase_code = $request->input('purchase_code');
 		$envato_username = $request->input('envato_username');
 		$email = $request->input('email');
 		$mysql_database = $request->input('mysql_database');
-		$data = installPurchase($purchase_code,$envato_username,$email);
+		$data = installPurchase($purchase_code,$envato_username);
 
 		if($data['status'] != 'success'){
 	        if($request->has('ajax_submit')){
@@ -54,7 +54,6 @@ Class AccountController extends Controller{
 	        }
 			return redirect('/update')->withInput()->withErrors($data['message']);
 		}
-
 
 		if (!is_writable('../config/db.php')){
 	        if($request->has('ajax_submit')){
@@ -107,29 +106,6 @@ Class AccountController extends Controller{
 							}	
 						}
 
-						mysqli_query($link,'SET FOREIGN_KEY_CHECKS = 0');
-						mysqli_query($link,'truncate table `permission_role`');
-						mysqli_query($link,'truncate table `permissions`');
-
-						$query = "select id from roles where name='admin' ";
-						$check = mysqli_query($link,$query);
-						$row = mysqli_fetch_array($check);
-						$role_id = $row['id'];
-						mysqli_query($link,"update roles set is_hidden='1' where id='$role_id' ");
-
-						$query1 = "select id,designation_id from users";
-						$check1 = mysqli_query($link,$query1);
-						$row1 = mysqli_fetch_array($check1);
-						$user_id = $row1['id'];
-						$designation_id = $row1['designation_id'];
-						mysqli_query($link,"update users set is_hidden='1' where id='$user_id' ");
-						mysqli_query($link,"update designations set is_hidden='1' where id='$designation_id' ");
-						$query2 = "select departments.id from departments,designations where designations.department_id = departments.id and designations.id = '$designation_id'";
-						$check2 = mysqli_query($link,$query2);
-						$row2 = mysqli_fetch_array($check2);
-						$department_id = $row2['id'];
-						mysqli_query($link,"update departments set is_hidden='1' where id='$department_id' ");
-						
 						$db = config('db');
 						$db['hostname'] = $request->input('hostname');
 						$db['database'] = $request->input('mysql_database');
@@ -139,6 +115,7 @@ Class AccountController extends Controller{
 						
 						$config = config('code');
 						$config['purchase_code'] = $purchase_code;
+						complete($purchase_code);
 						write2Config($config,'code');
 						
 						return redirect('/')->withSuccess('Updated successfully.');
@@ -164,6 +141,7 @@ Class AccountController extends Controller{
 			$config = config('code');
 			$config['purchase_code'] = $purchase_code;
 			write2Config($config,'code');
+			complete($purchase_code);
 			return redirect('/login')->withSuccess($data['message']);
 		}
 		else
@@ -171,7 +149,7 @@ Class AccountController extends Controller{
     }
 
    public function releaseLicense(){
-    	if(!config('code.mode'))
+    	if(!config('code.mode') || !defaultRole())
     		return redirect('/dashboard');
     	
         if(!is_connected())
@@ -194,7 +172,7 @@ Class AccountController extends Controller{
    }
 
 	public function checkUpdate(){
-    	if(!config('code.mode'))
+    	if(!config('code.mode') || !defaultRole())
     		return redirect('/dashboard');
 
     	$data = (config('code.build') && is_connected()) ? getUpdate() : [];
@@ -276,6 +254,14 @@ Class AccountController extends Controller{
 
 		if($data['status'] != 'success')
 			return redirect()->back()->withInput()->withErrors($data['message']);
+		
+        if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
+        }
 
 		if (!is_writable('../config/db.php'))
 			return redirect()->back()->withInput()->withErrors('db.php file is not writable.');
@@ -334,6 +320,7 @@ Class AccountController extends Controller{
 
 							$config = config('code');
 							$config['purchase_code'] = $purchase_code;
+							complete($purchase_code);
 							write2Config($config,'code');
 							return redirect('/')->withSuccess('Installed successfully.');
 						}

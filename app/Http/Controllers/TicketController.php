@@ -168,8 +168,10 @@ Class TicketController extends Controller{
 
 		$status = Helper::translateList(config('lists.ticket_status'));
 
-		if(Entrust::can('manage_all_ticket'))
+		if(defaultRole())
 			$users = \App\User::all()->pluck('full_name_with_designation','id')->all();
+		elseif(Entrust::can('manage_all_ticket'))
+			$users = \App\User::whereIsHidden(0)->get()->pluck('full_name_with_designation','id')->all();
 		elseif(Entrust::can('manage_subordinate_ticket')){
 			$child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
 			$users = \App\User::whereIn('designation_id',$child_designations)->orWhere('id','=',Auth::user()->id)->get()->pluck('full_name_with_designation','id')->all();

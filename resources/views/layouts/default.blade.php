@@ -23,7 +23,7 @@
     </div>
 </div>
 <div id="overlay"></div>
-<div class="modal fade" id="myModal" role="basic" aria-hidden="true">
+<div class="modal fade" id="myModal" role="dialog" aria-hidden="true">
 	<div class="modal-dialog modal-lg">
 		<div class="modal-content">
 		</div>

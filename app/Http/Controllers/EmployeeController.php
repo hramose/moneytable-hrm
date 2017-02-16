@@ -46,11 +46,13 @@ class EmployeeController extends Controller{
                 trans('messages.email'),
                 trans('messages.role'),
                 trans('messages.designation'),
+                trans('messages.location'),
                 trans('messages.status'));
         $table_info = array(
             'source' => 'employee',
             'title' => 'Employee List',
-            'id' => 'employee_table'
+            'id' => 'employee_table',
+            'form' => 'employee_filter_form'
         );
 
         $designation_users = User::select('designation_id', DB::raw('count(*) as total'))
@@ -60,6 +62,19 @@ class EmployeeController extends Controller{
         foreach($designation_users as $designation_user){
             $designation_user_stat[] = array($designation_user->Designation->name, $designation_user->total);
         }
+
+        $location_data = array();
+        foreach(\App\Location::all() as $location)
+            $location_data[$location->name] = 0;
+        foreach(User::whereStatus('active')->get() as $user){
+            $user_location = Helper::getLocation(date('Y-m-d'),$user->id);
+            if(array_key_exists($user_location,$location_data))
+                $location_data[$user_location]++;
+        }
+
+        $location_stat[] = array('Location','Count');
+        foreach($location_data as $key => $value)
+            $location_stat[] = array($key,$value);
 
         $status_users = User::select('status', DB::raw('count(*) as total'))
              ->groupBy('status')
@@ -72,9 +87,12 @@ class EmployeeController extends Controller{
         $departments = \App\Department::all();
         $department_user_stat[] = array('Department','Count');
         foreach($departments as $department){
+            $department_user_count = 0;
             foreach($department->Designation as $designation)
-            $department_user_stat[] = array($department->name,$designation->hasMany('\App\User')->count());
+                $department_user_count += $designation->hasMany('\App\User')->count();
+            $department_user_stat[] = array($department->name,$department_user_count);
         }
+        $locations = \App\Location::all()->pluck('name','id')->all();
 
         $role_users = DB::table('role_user')->join('roles','roles.id','=','role_user.role_id')->select('name', DB::raw('count(*) as total'))
              ->groupBy('role_id')
@@ -83,32 +101,50 @@ class EmployeeController extends Controller{
         foreach($role_users as $role_user)
             $role_user_stat[] = array(Helper::toWord($role_user->name),$role_user->total);
 
-        $employee_graph_data = array('designation_wise_user_graph' => $designation_user_stat,'status_wise_user_graph' => $status_user_stat,'department_wise_user_graph' => $department_user_stat, 'role_wise_user_graph' => $role_user_stat);
+        $employee_graph_data = array('designation_wise_user_graph' => $designation_user_stat,'status_wise_user_graph' => $status_user_stat,'department_wise_user_graph' => $department_user_stat, 'role_wise_user_graph' => $role_user_stat,'location_wise_user_graph' => $location_stat);
 
         $assets = ['graph'];
-        return view('employee.index',compact('col_heads','table_info','designations','roles','assets','employee_graph_data'));
+        return view('employee.index',compact('col_heads','table_info','designations','roles','assets','employee_graph_data','locations'));
     }
 
     public function lists(Request $request){
 
-        if(Entrust::can('manage_all_employee'))
-          $employees = User::all();
+        if(defaultRole())
+          $query = User::whereNotNull('id');
+        elseif(Entrust::can('manage_all_employee'))
+          $query = User::whereIsHidden(0);
         elseif(Entrust::can('manage_subordinate_employee')){
           $childs = Helper::childDesignation(Auth::user()->designation_id,1);
-          $employees = User::with('roles')->whereIn('designation_id',$childs)->get();
+          $query = User::whereIn('designation_id',$childs);
         } else
-          $employees = [];
+          $query = User::whereNull('id');
+
+        if($request->has('role_id'))
+            $query->whereHas('roles',function($q) use ($request){
+                $q->where('role_id','=',$request->input('role_id'));
+            });
+
+        $employees = $query->get();
 
         $rows=array();
+        $location = ($request->has('location_id')) ? \App\Location::whereId($request->input('location_id'))->first() : null;
+        
+        if($request->input('designation_id'))
+            $employees = $employees->whereLoose('designation_id',$request->input('designation_id'))->all();
+
+        if($request->input('status'))
+            $employees = $employees->whereLoose('status',$request->input('status'))->all();
 
         foreach ($employees as $employee){
 
             foreach($employee->roles as $role)
               $role_name = Helper::toWord($role->name);
 
+            if(!$location || $location->name == Helper::getLocation(date('Y-m-d'),$employee->id))
             $rows[] = array(
                     '<div class="btn-group btn-group-xs">'.
                     '<a href="/employee/'.$employee->id.'" class="btn btn-default btn-xs" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-arrow-circle-right"></i></a> '.
+                    (($employee->status != 'in-active') ? '<a href="#" data-href="/employee/'.$employee->id.'/change-status" class="btn btn-default btn-xs" data-toggle="modal" data-target="#myModal"> <i class="fa fa-user" data-toggle="tooltip" title="'.trans('messages.change').' '.trans('messages.status').'"></i></a> ' : '').
                     (Entrust::can('delete_employee') ? delete_form(['employee.destroy',$employee->id],'employee',1) : '').
                     '</div>',
                     ($employee->Profile->employee_code != '') ? $employee->Profile->employee_code : trans('messages.na') ,
@@ -118,11 +154,193 @@ class EmployeeController extends Controller{
                     $employee->email,
                     $role_name,
                     $employee->Designation->full_designation,
-                    ($employee->status == 'active') ? '<span class="label label-success">'.trans('messages.active').'</span>' : '<span class="label label-danger">'.trans('messages.in_active').'</span>'
+                    Helper::getLocation(date('Y-m-d'),$employee->id),
+                    ($employee->status == 'active' || $employee->status == '') ? '<span class="label label-success">'.trans('messages.active').'</span>' : '<span class="label label-danger">'.Helper::toWord($employee->status).'</span>'
                     );  
             }
         $list['aaData'] = $rows;
         return json_encode($list);
+    }
+
+    public function register(){
+
+        if(!config('config.enable_registration'))
+            return redirect('/');
+
+        $locations = \App\Location::all()->pluck('name','id')->all();
+        return view('auth.register',compact('locations'));
+    }
+
+    public function postRegister(Request $request){
+
+        if(!config('config.enable_registration'))
+            return redirect('/');
+
+        $validation = Validator::make($request->all(),[
+            'first_name' => 'required',
+            'last_name' => 'required',
+            'password' => 'required|confirmed|min:6',
+            'email' => 'required|email|max:255|unique:users',
+            'username' => 'required|min:4|max:255|unique:users',
+            'password_confirmation' => 'required|same:password'
+        ]);
+
+        if($validation->fails()){
+            if($request->has('ajax_submit')){
+                $response = ['message' => $validation->messages()->first(), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors($validation->messages()->first());
+        }
+
+        if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
+        }
+
+        $default_designation = \App\Designation::whereIsDefault(1)->first();
+        $default_role = \App\Role::whereIsDefault(1)->first();
+
+        if(!$default_designation || !$default_role){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.permission_denied'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors(trans('messages.permission_denied'));
+        }
+
+        $user = new \App\User;
+        $user->fill($request->all());
+        $user->password = bcrypt($request->input('password'));
+        $user->designation_id = $default_designation->id;
+        $user->status = 'pending_activation';
+        $user->activation_token = randomString('30','token');
+        $user->save();
+        $profile = new \App\Profile;
+        $profile->user()->associate($user);
+        $profile->date_of_joining = date('Y-m-d');
+        $profile->save();
+        $user->attachRole($default_role->id);
+
+        $user_location = new \App\UserLocation;
+        $user_location->from_date = date('Y-m-d');
+        $user_location->location_id = $request->input('location_id');
+        $user_location->user_id = $user->id;
+        $user_location->save();
+
+        \Mail::send('emails.default.account_activation', compact('user'), function($message) use ($user){
+            $message->to($user->email)->subject('User Activation');
+        });
+
+        if($request->has('ajax_submit')){
+            $response = ['message' => trans('messages.registration_complete').' '.trans('messages.activate_your_account'), 'status' => 'success']; 
+            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+        }
+        return redirect()->back()->withSuccess(trans('messages.registration_complete').' '.trans('messages.activate_your_account'));  
+    }
+
+    public function resendActivation(){
+
+        if(!config('config.enable_registration'))
+            return redirect('/');
+
+        return view('auth.resend_activation');
+    }
+
+    public function postResendActivation(Request $request){
+
+        if(!config('config.enable_registration'))
+            return redirect('/');
+
+        $user = \App\User::whereEmail($request->input('email'))->first();
+
+        if(!$user){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.no_user_with_email'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors(trans('messages.no_user_with_email'));
+        } elseif($user->status != 'pending_activation'){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.invalid_link'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors(trans('messages.invalid_link'));
+        }
+
+        \Mail::send('emails.default.account_activation', compact('user'), function($message) use ($user){
+            $message->to($user->email)->subject('User Activation');
+        });
+
+        if($request->has('ajax_submit')){
+            $response = ['message' => trans('messages.activation_email_sent'), 'status' => 'success']; 
+            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+        }
+        return redirect('/')->withSuccess(trans('messages.activation_email_sent'));
+    }
+
+    public function activateAccount($token = null){
+
+        if(!config('config.enable_registration'))
+            return redirect('/');
+        
+        if($token == null)
+            return redirect('/');
+
+        $user = \App\User::whereActivationToken($token)->first();
+
+        if(!$user)
+            return redirect('/')->withErrors(trans('messages.invalid_link'));
+
+        if($user->status != 'pending_activation')
+            return redirect('/')->withErrors(trans('messages.invalid_link'));
+
+        $user->status = 'pending_approval';
+        $user->save();
+        return redirect('/')->withSuccess(trans('messages.account_activated'));
+    }
+
+    public function changeStatus($id){
+
+        $employee = \App\User::find($id);
+
+        if(!$employee || !$this->employeeAccessible($employee) || $employee->hasRole(DEFAULT_ROLE) || $employee->status == 'in-active')
+            return view('common.error',['message' => trans('messages.permission_denied')]);
+
+        return view('employee.change_status',compact('employee'));
+
+    }
+
+    public function postChangeStatus(Request $request, $id){
+
+        $employee = \App\User::find($id);
+
+        if(!$employee || !$this->employeeAccessible($employee))
+            return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
+
+        $validation = Validator::make($request->all(),[
+            'status' => 'required'
+        ]);
+
+        if($validation->fails()){
+            if($request->has('ajax_submit')){
+                $response = ['message' => $validation->messages()->first(), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect()->back()->withErrors($validation->messages()->first());
+        }
+
+        $employee->status = $request->input('status');
+        $employee->save();
+
+        if($request->has('ajax_submit')){
+            $response = ['message' => trans('messages.employee').' '.trans('messages.status').' '.trans('messages.updated'), 'status' => 'success']; 
+            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+        }
+        return redirect('/employee')->withSuccess(trans('messages.employee').' '.trans('messages.status').' '.trans('messages.updated'));
     }
 
     public function profile($id = null){
@@ -141,14 +359,24 @@ class EmployeeController extends Controller{
                 return redirect('/profile')->withErrors(trans('messages.permission_denied'));
 
         $contract = Helper::getContract($user->id);
+
+        $education_levels = \App\EducationLevel::pluck('name','id')->all();
+        $qualification_languages = \App\QualificationLanguage::pluck('name','id')->all();
+        $qualification_skills = \App\QualificationSkill::pluck('name','id')->all();
+        $employee_relation = Helper::translateList(config('lists.employee_relation'));
+        $document_types = DocumentType::pluck('name','id')->all();
+
         $menu = ['employee'];
 
-        return view('employee.profile',compact('user','contract','menu'));
+        return view('employee.profile',compact('user','contract','menu','education_levels','qualification_languages','qualification_skills','employee_relation','document_types'));
     }
 
     public function show(User $employee){
 
         if(!$this->employeeAccessible($employee) && $employee->id != Auth::user()->id)
+            return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
+
+        if(!defaultRole() && $employee->hasRole(DEFAULT_ROLE))
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
 
         if(Entrust::can('manage_all_employee'))
@@ -170,11 +398,15 @@ class EmployeeController extends Controller{
         $custom_field_values = Helper::getCustomFieldValues($this->form,$employee->id);
         $social_custom_field_values = Helper::getCustomFieldValues('employee-social-form-form',$employee->id);
         $contract_types = \App\ContractType::pluck('name','id')->all();
+        $education_levels = \App\EducationLevel::pluck('name','id')->all();
+        $qualification_languages = \App\QualificationLanguage::pluck('name','id')->all();
+        $qualification_skills = \App\QualificationSkill::pluck('name','id')->all();
         $earning_salary_types = SalaryType::where('salary_type','=','earning')->get();
         $deduction_salary_types = SalaryType::where('salary_type','=','deduction')->get();
         $leave_types = LeaveType::all();
         $contract_lists = \App\Contract::whereUserId($employee->id)->get()->pluck('full_contract_detail','id')->all();
         $office_shifts = \App\OfficeShift::all()->pluck('name','id')->all();
+        $locations = \App\Location::all()->pluck('name','id')->all();
         $document_types = DocumentType::pluck('name','id')->all();
 
         $templates = \App\Template::whereIsDefault(0)->pluck('name','id')->all();
@@ -182,7 +414,7 @@ class EmployeeController extends Controller{
         $assets = ['rte'];
         $menu = ['employee'];
 
-        return view('employee.show',compact('employee','designations','assets','menu','role','roles','gender','marital_status','custom_field_values','employee_relation','social_custom_field_values','contract_types','earning_salary_types','deduction_salary_types','leave_types','contract_lists','office_shifts','document_types','templates'));
+        return view('employee.show',compact('employee','designations','assets','menu','role','roles','gender','marital_status','custom_field_values','employee_relation','social_custom_field_values','contract_types','earning_salary_types','deduction_salary_types','leave_types','contract_lists','office_shifts','document_types','templates','education_levels','qualification_languages','qualification_skills','locations'));
     }
 
     public function edit(User $employee){
@@ -271,7 +503,7 @@ class EmployeeController extends Controller{
 
         $profile->save();
 
-        $this->logActivity(['module' => 'employee','unique_id' => $employee->id,'activity' => 'activity_profile_updated']);
+        $this->logActivity(['module' => 'profile','unique_id' => $employee->id,'activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.profile').' '.trans('messages.updated'), 'status' => 'success']; 
@@ -300,9 +532,18 @@ class EmployeeController extends Controller{
             }
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
         }
+        
+        if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
+            if($request->has('ajax_submit')){
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+            }
+            return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
+        }
 
         $employee->first_name = $request->input('first_name');
         $employee->last_name = $request->input('last_name');
+        $employee->username = $request->input('username');
         $employee->email = $request->input('email');
         if($request->has('designation_id'))
         $employee->designation_id = $request->input('designation_id');
@@ -315,6 +556,7 @@ class EmployeeController extends Controller{
 
         $profile = $employee->Profile ?: new Profile;
         $profile->gender = $request->input('gender');
+        $profile->contact_number = $request->input('contact_number');
         $profile->marital_status = $request->input('marital_status');
         $profile->employee_code = $request->input('employee_code');
         $profile->date_of_birth = ($request->input('date_of_birth')) ? : null;
@@ -423,7 +665,7 @@ class EmployeeController extends Controller{
 
         $employee->password = bcrypt($credentials['new_password']);
         $employee->save();
-        $this->logActivity(['module' => 'authentication','activity' => 'activity_employee_password_changed']);
+        $this->logActivity(['module' => 'authentication','activity' => 'activity_password_changed','secondary_id' => $employee->id]);
 
         $response = ['message' => trans('messages.password_changed'), 'status' => 'success']; 
         return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
@@ -455,7 +697,7 @@ class EmployeeController extends Controller{
         });
         $this->logEmail(array('to' => $mail['email'],'subject' => $mail['subject'],'body' => $body));
 
-        $this->logActivity(['module' => 'employee','unique_id' => $user->id,'activity' => 'mail_sent']);
+        $this->logActivity(['module' => 'employee','unique_id' => $user->id,'activity' => 'activity_mail_sent']);
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.mail').' '.trans('messages.sent'), 'status' => 'success']; 
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));

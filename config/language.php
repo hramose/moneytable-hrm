@@ -39,46 +39,6 @@
     'value' => 'Active',
     'module' => 'system',
   ),
-  'activity' => 
-  array (
-    'value' => 'Activity',
-    'module' => 'activity_log',
-  ),
-  'activity_added' => 
-  array (
-    'value' => 'added.',
-    'module' => 'activity_log',
-  ),
-  'activity_deleted' => 
-  array (
-    'value' => 'deleted.',
-    'module' => 'activity_log',
-  ),
-  'activity_employee_password_changed' => 
-  array (
-    'value' => 'Employee password changed.',
-    'module' => 'activity_log',
-  ),
-  'activity_logged_in' => 
-  array (
-    'value' => 'Logged In.',
-    'module' => 'activity_log',
-  ),
-  'activity_logged_out' => 
-  array (
-    'value' => 'Logged out.',
-    'module' => 'activity_log',
-  ),
-  'activity_message_sent' => 
-  array (
-    'value' => 'Message Sent.',
-    'module' => 'activity_log',
-  ),
-  'activity_updated' => 
-  array (
-    'value' => 'updated.',
-    'module' => 'activity_log',
-  ),
   'add' => 
   array (
     'value' => 'Add',
@@ -1244,11 +1204,6 @@
     'value' => 'Language Configuration',
     'module' => 'language',
   ),
-  'activity_language_switched' => 
-  array (
-    'value' => 'Language switched.',
-    'module' => 'activity_log',
-  ),
   'switched' => 
   array (
     'value' => 'switched.',
@@ -1257,16 +1212,6 @@
   'language_translation' => 
   array (
     'value' => 'Language translation',
-    'module' => 'language',
-  ),
-  'activity_language_translation_updated' => 
-  array (
-    'value' => 'Language translation updated.',
-    'module' => 'language',
-  ),
-  'activity_language_translation_word_added' => 
-  array (
-    'value' => 'New word added for translation.',
     'module' => 'language',
   ),
   'last_login' => 
@@ -1306,7 +1251,7 @@
   ),
   'leave_cannot_edit' => 
   array (
-    'value' => 'Leave cannot be edited. Its either approved or rejected.',
+    'value' => 'Leave cannot be edited. Its already processed.',
     'module' => 'leave',
   ),
   'leave_not_defined' => 
@@ -1441,7 +1386,7 @@
   ),
   'message' => 
   array (
-    'value' => 'message',
+    'value' => 'Message',
     'module' => 'message',
   ),
   'module' => 
@@ -1619,9 +1564,9 @@
     'value' => 'Only',
     'module' => 'system',
   ),
-  'only_xls_file_allowed' => 
+  'only_csv_file_allowed' => 
   array (
-    'value' => 'Only xls/xlsx files are allowed.',
+    'value' => 'Only csv files are allowed.',
     'module' => 'attendance',
   ),
   'open' => 
@@ -2059,9 +2004,9 @@
     'value' => 'Shift',
     'module' => 'attendance',
   ),
-  'shift_already_defined' => 
+  'entry_already_defined' => 
   array (
-    'value' => 'Shift already defined for this contract period.',
+    'value' => 'This entry is already defined for selected period.',
     'module' => 'employee',
   ),
   'shift_already_marked_default' => 
@@ -2474,6 +2419,11 @@
     'value' => 'The :attribute must be a before or equal to end date.',
     'module' => 'validation',
   ),
+  'validation_after_equal' => 
+  array (
+    'value' => 'The :attribute must be a after or equal to start date.',
+    'module' => 'validation',
+  ),
   'validation_between_array' => 
   array (
     'value' => 'The :attribute must have between :min and :max items.',
@@ -2759,10 +2709,15 @@
     'value' => 'Zipcode',
     'module' => 'configuration',
   ),
+  'activity' => 
+  array (
+    'value' => 'Activity',
+    'module' => 'activity',
+  ),
   'activity_log' => 
   array (
     'value' => 'Activity Log',
-    'module' => 'system',
+    'module' => 'activity',
   ),
   'week' => 
   array (
@@ -2813,61 +2768,6 @@
   array (
     'value' => 'Admin Remarks',
     'module' => 'leave',
-  ),
-  'activity_configuration_updated' => 
-  array (
-    'value' => 'Configuration updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_permission_updated' => 
-  array (
-    'value' => 'Permission update.',
-    'module' => 'activity_log',
-  ),
-  'activity_mail_configuration_updated' => 
-  array (
-    'value' => 'Mail Configuration updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_sms_configuration_updated' => 
-  array (
-    'value' => 'SMS Configuration updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_api_token_updated' => 
-  array (
-    'value' => 'API Token updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_job_configuration_updated' => 
-  array (
-    'value' => 'Job Configuration updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_made_default' => 
-  array (
-    'value' => 'made default.',
-    'module' => 'activity_log',
-  ),
-  'activity_language_plugin_updated' => 
-  array (
-    'value' => 'Language plugin updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_status_updated' => 
-  array (
-    'value' => 'status updated.',
-    'module' => 'activity_log',
-  ),
-  'activity_saved' => 
-  array (
-    'value' => 'saved.',
-    'module' => 'activity_log',
-  ),
-  'activity_user_assigned' => 
-  array (
-    'value' => 'User assigned.',
-    'module' => 'activity_log',
   ),
   'job_opening' => 
   array (
@@ -3189,16 +3089,6 @@
     'value' => 'Enable clock in & clock out during login & logout',
     'module' => 'authentication',
   ),
-  'activity_clock_in' => 
-  array (
-    'value' => 'Clocked in',
-    'module' => 'activity_log',
-  ),
-  'activity_clock_out' => 
-  array (
-    'value' => 'Clocked out',
-    'module' => 'activity_log',
-  ),
   'notification_position' => 
   array (
     'value' => 'Notification Position',
@@ -3509,11 +3399,6 @@
     'value' => 'API token updated.',
     'module' => 'api',
   ),
-  'activity_profile_updated' => 
-  array (
-    'value' => 'Profile updated.',
-    'module' => 'activity_log',
-  ),
   'year' => 
   array (
     'value' => 'Year',
@@ -3539,14 +3424,454 @@
     'value' => 'Hour',
     'module' => 'system',
   ),
-  'activity_backup_generated' => 
-  array (
-    'value' => 'Backup generated.',
-    'module' => 'system',
-  ),
   'menu' => 
   array (
     'value' => 'Menu',
     'module' => 'system',
+  ),
+  'qualification' => 
+  array (
+    'value' => 'Qualification',
+    'module' => 'employee',
+  ),
+  'education_level' => 
+  array (
+    'value' => 'Education Level',
+    'module' => 'employee',
+  ),
+  'skill' => 
+  array (
+    'value' => 'Skill',
+    'module' => 'employee',
+  ),
+  'qualification_skill' => 
+  array (
+    'value' => 'Qualification Skill',
+    'module' => 'employee',
+  ),
+  'qualification_language' => 
+  array (
+    'value' => 'Qualification Language',
+    'module' => 'employee',
+  ),
+  'daily_report' => 
+  array (
+    'value' => 'Daily Report',
+    'module' => 'employee',
+  ),
+  'duplicate_entry' => 
+  array (
+    'value' => 'The combination of :attr1 and :attr2 already exists.',
+    'module' => 'validation',
+  ),
+  'multilingual' => 
+  array (
+    'value' => 'Multilingual',
+    'module' => 'configuration',
+  ),
+  'employee_manage_own_contact' => 
+  array (
+    'value' => 'Employee can manage own contact information',
+    'module' => 'employee',
+  ),
+  'employee_manage_own_bank_account' => 
+  array (
+    'value' => 'Employee can manage own bank account',
+    'module' => 'employee',
+  ),
+  'employee_manage_own_qualification' => 
+  array (
+    'value' => 'Employee can manage own qualification',
+    'module' => 'employee',
+  ),
+  'employee_manage_own_document' => 
+  array (
+    'value' => 'Employee can manage own documents',
+    'module' => 'employee',
+  ),
+  'employee_manage_own_work_experience' => 
+  array (
+    'value' => 'Employee can manage own work experience',
+    'module' => 'employee',
+  ),
+  'leave_approval_level' => 
+  array (
+    'value' => 'Leave approval level',
+    'module' => 'leave',
+  ),
+  'multiple' => 
+  array (
+    'value' => 'Multiple',
+    'module' => 'system',
+  ),
+  'last' => 
+  array (
+    'value' => 'Last',
+    'module' => 'system',
+  ),
+  'level' => 
+  array (
+    'value' => 'Level',
+    'module' => 'system',
+  ),
+  'no_of_level' => 
+  array (
+    'value' => 'No of Level',
+    'module' => 'leave',
+  ),
+  'work_experience' => 
+  array (
+    'value' => 'Work Experience',
+    'module' => 'employee',
+  ),
+  'institute' => 
+  array (
+    'value' => 'Insitute',
+    'module' => 'employee',
+  ),
+  'approval' => 
+  array (
+    'value' => 'Approval',
+    'module' => 'system',
+  ),
+  'expense_approval_level' => 
+  array (
+    'value' => 'Expense Approval Level',
+    'module' => 'expense',
+  ),
+  'username_allowed_characters' => 
+  array (
+    'value' => 'Only alphanumeric, period, underscore & hypen characters are allowed in username.',
+    'module' => 'authentication',
+  ),
+  'expense_cannot_edit' => 
+  array (
+    'value' => 'Expense cannot be edited. Its already processed.',
+    'module' => 'expense',
+  ),
+  'lock' => 
+  array (
+    'value' => 'Lock',
+    'module' => 'system',
+  ),
+  'unlock' => 
+  array (
+    'value' => 'Unlock',
+    'module' => 'system',
+  ),
+  'uploaded_count' => 
+  array (
+    'value' => 'Uploaded',
+    'module' => 'attendance',
+  ),
+  'uploaded' => 
+  array (
+    'value' => 'uploaded',
+    'module' => 'attendance',
+  ),
+  'payroll_include_day_summary' => 
+  array (
+    'value' => 'Include day summary in Payroll',
+    'module' => 'payroll',
+  ),
+  'payroll_include_leave_summary' => 
+  array (
+    'value' => 'Include leave summary in Payroll',
+    'module' => 'payroll',
+  ),
+  'payroll_include_hour_summary' => 
+  array (
+    'value' => 'Include hour summary in Payroll',
+    'module' => 'payroll',
+  ),
+  'clock_in_clock_out_outside_time' => 
+  array (
+    'value' => 'Clock in found between this clock in & clock out.',
+    'module' => 'attendance',
+  ),
+  'activity_added' => 
+  array (
+    'value' => 'added.',
+    'module' => 'activity',
+  ),
+  'activity_updated' => 
+  array (
+    'value' => 'updated.',
+    'module' => 'activity',
+  ),
+  'activity_deleted' => 
+  array (
+    'value' => 'deleted.',
+    'module' => 'activity',
+  ),
+  'activity_generated' => 
+  array (
+    'value' => 'generated.',
+    'module' => 'activity',
+  ),
+  'activity_clocked_in' => 
+  array (
+    'value' => 'clocked in.',
+    'module' => 'activity',
+  ),
+  'activity_clocked_out' => 
+  array (
+    'value' => 'clocked out.',
+    'module' => 'activity',
+  ),
+  'activity_uploaded' => 
+  array (
+    'value' => 'uploaded.',
+    'module' => 'activity',
+  ),
+  'activity_status_updated' => 
+  array (
+    'value' => 'status updated.',
+    'module' => 'activity',
+  ),
+  'activity_password_changed' => 
+  array (
+    'value' => 'password changed.',
+    'module' => 'activity',
+  ),
+  'activity_mail_sent' => 
+  array (
+    'value' => 'mail sent.',
+    'module' => 'activity',
+  ),
+  'activity_switched' => 
+  array (
+    'value' => 'switched.',
+    'module' => 'activity',
+  ),
+  'activity_message_sent' => 
+  array (
+    'value' => 'message sent.',
+    'module' => 'activity',
+  ),
+  'activity_made_default' => 
+  array (
+    'value' => 'made default.',
+    'module' => 'activity',
+  ),
+  'activity_assigned' => 
+  array (
+    'value' => 'assigned.',
+    'module' => 'activity',
+  ),
+  'activity_logged_in' => 
+  array (
+    'value' => 'logged in.',
+    'module' => 'activity',
+  ),
+  'activity_logged_out' => 
+  array (
+    'value' => 'logged out.',
+    'module' => 'activity',
+  ),
+  'translation_word' => 
+  array (
+    'value' => 'Translation word',
+    'module' => 'language',
+  ),
+  'clock' => 
+  array (
+    'value' => 'Clock',
+    'module' => 'attendance',
+  ),
+  'fixed' => 
+  array (
+    'value' => 'Fixed',
+    'module' => 'employee',
+  ),
+  'overtime_hourly_rate' => 
+  array (
+    'value' => 'Hourly overtime rate',
+    'module' => 'payroll',
+  ),
+  'late_hourly_rate' => 
+  array (
+    'value' => 'Hourly late rate',
+    'module' => 'payroll',
+  ),
+  'early_leaving_hourly_rate' => 
+  array (
+    'value' => 'Hourly early leaving rate',
+    'module' => 'payroll',
+  ),
+  'hourly_rate' => 
+  array (
+    'value' => 'Hourly Rate',
+    'module' => 'payroll',
+  ),
+  'hourly_payroll' => 
+  array (
+    'value' => 'Hourly Payroll',
+    'module' => 'payroll',
+  ),
+  'hourly' => 
+  array (
+    'value' => 'Hourly',
+    'module' => 'system',
+  ),
+  'generate_multiple_payroll' => 
+  array (
+    'value' => 'Generate Multiple Payroll',
+    'module' => 'payroll',
+  ),
+  'payroll_days_required' => 
+  array (
+    'value' => 'Payroll days field is required when date ranging from one month to another.',
+    'module' => 'payroll',
+  ),
+  'top_location_cannot_become_child' => 
+  array (
+    'value' => 'Top location cannot become child location.',
+    'module' => 'location',
+  ),
+  'top_location' => 
+  array (
+    'value' => 'Top Location',
+    'module' => 'location',
+  ),
+  'message_category' => 
+  array (
+    'value' => 'Message Category',
+    'module' => 'message',
+  ),
+  'message_priority' => 
+  array (
+    'value' => 'Message Priority',
+    'module' => 'message',
+  ),
+  'receiver' => 
+  array (
+    'value' => 'Receiver',
+    'module' => 'message',
+  ),
+  'start_date_greater_than_end_date' => 
+  array (
+    'value' => 'Start date cannot be greater than end date.',
+    'module' => 'system',
+  ),
+  'till_date' => 
+  array (
+    'value' => 'till date',
+    'module' => 'system',
+  ),
+  'already_undefined_end_date' => 
+  array (
+    'value' => 'Invalid entry, some entry has already undefined end date.',
+    'module' => 'system',
+  ),
+  'back_date_entry' => 
+  array (
+    'value' => 'Invalid entry, past entry can not be added.',
+    'module' => 'system',
+  ),
+  'user_location' => 
+  array (
+    'value' => 'User Location',
+    'module' => 'location',
+  ),
+  'rating' => 
+  array (
+    'value' => 'Rating',
+    'module' => 'employee',
+  ),
+  'registration' => 
+  array (
+    'value' => 'Registration',
+    'module' => 'employee',
+  ),
+  'register' => 
+  array (
+    'value' => 'Register',
+    'module' => 'employee',
+  ),
+  'first' => 
+  array (
+    'value' => 'First',
+    'module' => 'employee',
+  ),
+  'registration_complete' => 
+  array (
+    'value' => 'Registration completed successfully.',
+    'module' => 'employee',
+  ),
+  'activate_your_account' => 
+  array (
+    'value' => 'Please check your email & activate your account.',
+    'module' => 'employee',
+  ),
+  'resend' => 
+  array (
+    'value' => 'Resend',
+    'module' => 'system',
+  ),
+  'activation' => 
+  array (
+    'value' => 'Activation',
+    'module' => 'authentication',
+  ),
+  'activation_email_sent' => 
+  array (
+    'value' => 'Activation email sent your email Id. Please check your email.',
+    'module' => 'authentication',
+  ),
+  'account_activated' => 
+  array (
+    'value' => 'Your account has been activated.',
+    'module' => 'authentication',
+  ),
+  'sub_task' => 
+  array (
+    'value' => 'Sub task',
+    'module' => 'task',
+  ),
+  'leave_approver_unavailable' => 
+  array (
+    'value' => 'No leave approver defined for this employee.',
+    'module' => 'leave',
+  ),
+  'expense_approver_unavailable' => 
+  array (
+    'value' => 'No expense approver defined for this employee.',
+    'module' => 'expense',
+  ),
+  'with' => 
+  array (
+    'value' => 'With',
+    'module' => 'system',
+  ),
+  'enable' => 
+  array (
+    'value' => 'Enable',
+    'module' => 'system',
+  ),
+  'disable' => 
+  array (
+    'value' => 'Disable',
+    'module' => 'system',
+  ),
+  'mail_configuration' => 
+  array (
+    'value' => 'Mail Configuration',
+    'module' => 'system',
+  ),
+  'no_template_found' => 
+  array (
+    'value' => 'Email template not setup.',
+    'module' => 'template',
+  ),
+  'user_shift' => 
+  array (
+    'value' => 'User Shift',
+    'module' => 'employee',
+  ),
+  'user_leave' => 
+  array (
+    'value' => 'User Leave',
+    'module' => 'leave',
   ),
 );

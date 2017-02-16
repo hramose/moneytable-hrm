@@ -9,12 +9,6 @@ use App\Http\Requests\TaskCommentRequest;
 Class TaskCommentController extends Controller{
     use BasicController;
 
-	public function __construct()
-	{
-		if(!in_array('utilities', config('limit.available_module')))
-			$this->middleware('feature_available');
-	}
-	
 	public function store(TaskCommentRequest $request, $id){
 
 		$task_comment = new TaskComment;

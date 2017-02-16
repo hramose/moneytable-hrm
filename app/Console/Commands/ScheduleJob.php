@@ -32,6 +32,14 @@ class ScheduleJob extends Command
     {
         defaultDB();
         $users = \App\User::all();
+        $documents = \App\Document::all();
+        foreach($documents as $document){
+            if($document->date_of_expiry < date('Y-m-d'))
+                $document->status = '0';
+            else
+                $document->status = '1';
+            $document->save();
+        }
 
         foreach($users as $user){
             if(isset($user->Profile->date_of_leaving) && $user->Profile->date_of_leaving < date('Y-m-d'))
@@ -46,6 +54,9 @@ class ScheduleJob extends Command
                 $user->save();
             }
         }
+
+        if(config('constants.auto_lock_daily_report'))
+        \App\DailyReport::where('date','<',date('Y-m-d'))->update(['is_locked' => 1]);
         include('app/Classes/Dumper.php');
         $data = backupDatabase();
         if($data['status'] == 'success'){

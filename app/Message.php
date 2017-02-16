@@ -26,4 +26,12 @@ class Message extends Eloquent {
     {
         return $this->belongsTo('App\User','from_user_id'); 
     }
+
+    public function messageCategory(){
+    	return $this->belongsTo('App\MessageCategory');
+    }
+
+    public function messagePriority(){
+    	return $this->belongsTo('App\MessagePriority');
+    }
 }

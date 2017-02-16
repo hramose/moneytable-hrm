@@ -1,6 +1,8 @@
 <?php
 return array(
 	'message' => array('body'),
+	'daily-report' => array('description'),
+	'daily-report/*' => array('description'),
 	'announcement' => array('description'),
 	'announcement/*' => array('description'),
 	'award' => array('description'),

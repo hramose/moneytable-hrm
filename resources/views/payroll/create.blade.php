@@ -104,6 +104,7 @@
 			@if(isset($user))
 			<div class="col-sm-8">
 				<div class="box-info">
+					<h2><strong>{{trans('messages.payroll')}}</strong></h2>
 					{!! Form::open(['route' => 'payroll.store','role' => 'form', 'class'=>'payroll-store-form','id' => 'payroll-store-form','data-submit' => 'noAjax']) !!}
 					{!! Form::hidden('user_id',$user_id)!!}
 					{!! Form::hidden('from_date',$from_date)!!}

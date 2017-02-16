@@ -28,6 +28,8 @@
 				<div class="box-info full">
 					<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.task') !!}
 					<div class="additional-btn">
+						<a href="/user-task-rating" class="btn btn-sm btn-primary"><i class="fa fa-bars icon"></i> User Task Rating</a>
+						<a href="/user-task" class="btn btn-sm btn-primary"><i class="fa fa-bars icon"></i> User Task</a>
 						@if(Entrust::can('create_task'))
 						<button class="btn btn-sm btn-primary" data-toggle="collapse" data-target="#box-detail"><i class="fa fa-plus icon"></i> {!! trans('messages.add_new') !!}</button>
 						@endif

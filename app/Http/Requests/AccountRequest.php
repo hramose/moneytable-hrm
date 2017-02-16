@@ -25,7 +25,6 @@ class AccountRequest extends Request
         return [
             'hostname' => 'required',
             'mysql_username' => 'required',
-            'mysql_password' => 'required',
             'mysql_database' => 'required',
             'email' => 'required|email',
             'first_name' => 'required',

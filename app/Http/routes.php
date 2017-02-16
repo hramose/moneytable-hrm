@@ -5,11 +5,13 @@ Route::get('/whats-new',function(){
 });
 Route::get('/apply', 'JobApplicationController@apply');
 Route::post('/sidebar', 'DashboardController@sidebar');
-Route::get('/test','DashboardController@test');
 Route::post('/job-application', array('as' => 'job-application.store','uses' => 'JobApplicationController@store'));
 
 Route::post('/clock/in', array('as' => 'clock.in', 'uses' => 'ClockController@in'));
 Route::post('/clock/out', array('as' => 'clock.out', 'uses' => 'ClockController@out'));
+Route::get('/attendance-sample-file',function(){
+	return view('attendance_sample');
+});
 	
 Route::group(['middleware' => 'guest'], function () {
 	Route::get('/login', 'Auth\AuthController@getLogin');
@@ -25,6 +27,12 @@ Route::group(['middleware' => 'guest'], function () {
 	Route::resource('/install', 'AccountController',['only' => ['index', 'store']]);
 	Route::get('/update','AccountController@updateApp');
 	Route::post('/update',array('as' => 'update-app','uses' => 'AccountController@postUpdateApp'));
+
+	Route::get('/resend-activation','EmployeeController@resendActivation');
+	Route::post('/resend-activation',array('as' => 'user.resend-activation','uses' => 'EmployeeController@postResendActivation'));
+	Route::get('/activate-account/{token}','EmployeeController@activateAccount');
+	Route::get('/register','EmployeeController@register');
+	Route::post('/register','EmployeeController@postRegister');
 });
 
 Route::group(['middleware' => ['auth','license']], function () {
@@ -76,7 +84,7 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 		Route::model('office_shift','\App\OfficeShift');
 		Route::post('/office-shift/lists','OfficeShiftController@lists');
 		Route::resource('/office-shift', 'OfficeShiftController'); 
-		Route::get('/office-shift/{id}/default','OfficeShiftController@makeDefault');
+		Route::post('/office-shift/change-default','OfficeShiftController@changeDefault');
 
 		Route::model('contract_type','\App\ContractType');
 		Route::post('/contract-type/lists','ContractTypeController@lists');
@@ -86,6 +94,18 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 		Route::post('/award-type/lists','AwardTypeController@lists');
 		Route::resource('/award-type', 'AwardTypeController'); 
 
+		Route::model('education_level','\App\EducationLevel');
+		Route::post('/education-level/lists','EducationLevelController@lists');
+		Route::resource('/education-level', 'EducationLevelController'); 
+
+		Route::model('qualification_skill','\App\QualificationSkill');
+		Route::post('/qualification-skill/lists','QualificationSkillController@lists');
+		Route::resource('/qualification-skill', 'QualificationSkillController'); 
+
+		Route::model('qualification_language','\App\QualificationLanguage');
+		Route::post('/qualification-language/lists','QualificationLanguageController@lists');
+		Route::resource('/qualification-language', 'QualificationLanguageController'); 
+
 		Route::model('ip','\App\Ip');
 		Route::post('/ip/lists','IpController@lists');
 		Route::resource('/ip', 'IpController'); 
@@ -93,6 +113,14 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 		Route::model('leave_type','\App\LeaveType');
 		Route::post('/leave-type/lists','LeaveTypeController@lists');
 		Route::resource('/leave-type', 'LeaveTypeController'); 
+
+		Route::model('message_category','\App\MessageCategory');
+		Route::post('/message-category/lists','MessageCategoryController@lists');
+		Route::resource('/message-category', 'MessageCategoryController'); 
+		
+		Route::model('message_priority','\App\MessagePriority');
+		Route::post('/message-priority/lists','MessagePriorityController@lists');
+		Route::resource('/message-priority', 'MessagePriorityController'); 
 		
 		Route::model('document_type','\App\DocumentType');
 		Route::post('/document-type/lists','DocumentTypeController@lists');
@@ -114,6 +142,12 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::model('designation','\App\Designation');
 	Route::post('/designation/lists','DesignationController@lists');
 	Route::resource('/designation', 'DesignationController'); 
+	Route::post('/designation/hierarchy','DesignationController@hierarchy');
+	
+	Route::model('location','\App\Location');
+	Route::post('/location/lists','LocationController@lists');
+	Route::resource('/location', 'LocationController'); 
+	Route::post('/location/hierarchy','LocationController@hierarchy');
 	
 	Route::group(['middleware' => ['permission:manage_custom_field']], function () {
 		Route::model('custom_field','\App\CustomField');
@@ -147,6 +181,8 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::resource('/employee', 'EmployeeController',['except' => ['create', 'store']]);
 	Route::patch('/users/profile/{id}',['as' => 'employee.profile-update', 'uses' => 'EmployeeController@profileUpdate']);
 	Route::patch('/users/sms/{id}', ['as' => 'employee.send-employee-SMS', 'uses' => 'SMSController@sendEmployeeSMS']);
+	Route::get('/employee/{id}/change-status','EmployeeController@changeStatus');
+	Route::post('/employee/{id}/change-status',array('as' => 'employee.change-status','uses' => 'EmployeeController@postChangeStatus'));
 	Route::post('/template/content','TemplateController@content');
 	
 	Route::model('contact','\App\Contact');
@@ -159,6 +195,16 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::resource('/bank-account', 'BankAccountController'); 
 	Route::post('/bank-account/{id}',array('uses' => 'BankAccountController@store','as' => 'bank-account.store'));
 	
+	Route::model('qualification','\App\Qualification');
+	Route::post('/qualification/lists','QualificationController@lists');
+	Route::resource('/qualification', 'QualificationController'); 
+	Route::post('/qualification/{id}',array('uses' => 'QualificationController@store','as' => 'qualification.store'));
+
+	Route::model('work_experience','\App\WorkExperience');
+	Route::post('/work-experience/lists','WorkExperienceController@lists');
+	Route::resource('/work-experience', 'WorkExperienceController'); 
+	Route::post('/work-experience/{id}',array('uses' => 'WorkExperienceController@store','as' => 'work-experience.store'));
+
 	Route::model('document','\App\Document');
 	Route::post('/document/lists',array('as' => 'document.lists','uses' => 'DocumentController@lists'));
 	Route::post('/document/{id}',array('uses' => 'DocumentController@store','as' => 'document.store'));
@@ -166,7 +212,6 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::get('/document/download/{id}','DocumentController@download');
 	Route::get('/documents','DocumentController@filter');
 	Route::post('/filter-documents',['as' => 'document.filter','uses' => 'DocumentController@filter']);
-	Route::get('/document/status/{id}','DocumentController@changeStatus');
 	
 	Route::post('/salary/lists','SalaryController@lists');
 	Route::post('/salary/{id}',array('uses' => 'SalaryController@store','as' => 'salary.store'));
@@ -174,13 +219,19 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::patch('/salary/{id}/edit',array('uses' => 'SalaryController@update','as' => 'salary.update'));
 	Route::delete('/salary/{id}',array('uses' => 'SalaryController@destroy','as' => 'salary.destroy'));
 
-	Route::post('/user-shift/lists','UserShiftController@lists');
 	Route::post('/user-leave/lists','UserLeaveController@lists');
 	Route::post('/user-leave/{id}',array('uses' => 'UserLeaveController@store','as' => 'user-leave.store'));
 	Route::resource('/user-leave', 'UserLeaveController',['only' => ['edit','update','destroy']]); 
+	
+	Route::post('/user-shift/lists','UserShiftController@lists');
 	Route::model('user_shift','\App\UserShift');
 	Route::post('/user-shift/{id}',array('uses' => 'UserShiftController@store','as' => 'user-shift.store'));
 	Route::resource('/user-shift', 'UserShiftController',['except' => ['store']]); 
+
+	Route::post('/user-location/lists','UserLocationController@lists');
+	Route::model('user_location','\App\UserLocation');
+	Route::post('/user-location/{id}',array('uses' => 'UserLocationController@store','as' => 'user-location.store'));
+	Route::resource('/user-location', 'UserLocationController',['except' => ['store']]); 
 
 	Route::model('contract','\App\Contract');
 	Route::post('/contract/lists','ContractController@lists');
@@ -198,12 +249,19 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::post('/award/lists','AwardController@lists');
 	Route::resource('/award', 'AwardController'); 
 
+	Route::model('daily_report','\App\DailyReport');
+	Route::post('/daily-report/lists','DailyReportController@lists');
+	Route::resource('/daily-report', 'DailyReportController'); 
+	Route::post('/daily-report/change-status','DailyReportController@changeStatus');
+
 	Route::model('expense','\App\Expense');
 	Route::post('/expense/lists','ExpenseController@lists');
 	Route::resource('/expense', 'ExpenseController'); 
 	Route::get('/expense/{id}/download','ExpenseController@download');
 	Route::get('/expense/{id}/update-status','ExpenseController@editStatus');
-	Route::patch('/expense/{id}/update-status',array('as' => 'expense.update-status','uses' => 'ExpenseController@updateStatus'));
+	Route::post('/expense/{id}/update-status',array('as' => 'expense.update-status','uses' => 'ExpenseController@updateStatus'));
+	Route::post('/expense-statistics/lists','ExpenseController@postExpenseStatistics');
+	Route::get('/expense-statistics','ExpenseController@expenseStatistics');
 
 	Route::model('announcement','\App\Announcement');
 	Route::post('/announcement/lists','AnnouncementController@lists');
@@ -214,11 +272,25 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::resource('/task', 'TaskController'); 
 	Route::post('/update-task-progress/{id}', ['as' => 'task.update-task-progress', 'uses' => 'TaskController@updateTaskProgress']);
 	Route::post('/assign-task/{id}', ['as' => 'task.assign-task', 'uses' => 'TaskController@assignTask']);
+	Route::post('/store-task-rating/{id}',['as' => 'task.store-rating', 'uses' => 'TaskController@storeRating']);
+	Route::get('/delete-task-rating/{user_id}/{task_id}','TaskController@destroyRating');
 	Route::post('/task-comment/{id}',array('uses' => 'TaskCommentController@store','as' => 'task-comment.store'));
 	Route::delete('/task-comment/{id}',array('uses' => 'TaskCommentController@destroy','as' => 'task-comment.destroy'));
 	Route::post('/task-note/{id}',array('uses' => 'TaskNoteController@store','as' => 'task-note.store'));
+	Route::get('/user-task-rating','TaskController@userTaskRating');
+	Route::post('/user-task-rating/lists','TaskController@userTaskRatingLists');
+	Route::get('/user-task','TaskController@userTask');
+	Route::post('/user-task/lists','TaskController@userTaskLists');
+
+	Route::post('/task/{id}/sub-task',array('as' => 'task.add-sub-task','uses' => 'SubTaskController@store'));
+	Route::post('/sub-task/lists','SubTaskController@lists');
+	Route::get('/sub-task/{id}/edit','SubTaskController@edit');
+	Route::get('/sub-task-rating/{user_id}/{task_id}','TaskController@rating');
+	Route::patch('/sub-task/{id}',array('as' => 'sub-task.update','uses' => 'SubTaskController@update'));
+	Route::delete('/sub-task/{id}',array('as' => 'sub-task.destroy','uses' => 'SubTaskController@destroy'));
+	Route::get('/sub-task-rating/{user_id}/{task_id}/show','SubTaskController@showRating');
 	
-	Route::get('/task-attachment/{id}/lists',['uses' => 'TaskAttachmentController@lists','middleware' => 'ajax']);
+	Route::post('/task-attachment/{id}/lists',['uses' => 'TaskAttachmentController@lists','middleware' => 'ajax']);
 	Route::post('/task-attachment/{id}',array('uses' => 'TaskAttachmentController@store','as' => 'task-attachment.store'));
 	Route::delete('/task-attachment/{id}',array('uses' => 'TaskAttachmentController@destroy','as' => 'task-attachment.destroy'));
 	Route::get('/task-attachment/download/{id}','TaskAttachmentController@download');
@@ -245,6 +317,10 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::post('/leave/lists','LeaveController@lists');
 	Route::resource('/leave', 'LeaveController'); 
 	Route::post('/update-leave-status/{id}', ['as' => 'leave.update-status', 'uses' => 'LeaveController@updateStatus']);
+	Route::post('/leave-statistics/lists','LeaveController@postLeaveStatistics');
+	Route::get('/leave-statistics','LeaveController@leaveStatistics');
+	Route::get('/leave-analysis','LeaveController@analysis');
+	Route::post('/leave-analysis',array('as' => 'leave.analysis','uses' => 'LeaveController@postAnalysis'));
 
 	Route::model('clock','\App\Clock');
 	Route::post('/my-clock/lists','ClockController@lists');
@@ -263,23 +339,33 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 	Route::post('/date-wise-summary-attendance/lists','ClockController@listDateWiseSummaryAttendance');
 
 	Route::post('/upload-attendance',array('as' => 'clock.upload-attendance','uses' => 'ClockController@uploadAttendance'));
+	Route::get('/attendance-upload-log','ClockUploadController@index');
+	Route::post('/attendance-upload/lists','ClockUploadController@lists');
+	Route::get('/attendance-upload-log/{id}/download','ClockUploadController@download');
+	Route::delete('/attendance-upload-log/{id}',array('uses' => 'ClockUploadController@destroy','as' => 'clock-upload.destroy'));
+	Route::get('/attendance-upload-log/{id}','ClockUploadController@showFails');
 
 	Route::get('/update-attendance','ClockController@updateAttendance');
 	Route::post('/update-attendance',array('as' => 'clock.update-attendance','uses' => 'ClockController@updateAttendance'));
 	Route::post('/clock/{user_id}/{date}',array('as' => 'clock.clock-update','uses' => 'ClockController@clock'));
 	Route::post('/clock/{user_id}/{date}/{clock_id?}',array('as' => 'clock.clock-update','uses' => 'ClockController@clock'));
 
-	Route::get('/shift-detail','ClockController@shift');
+	Route::get('/shift-detail/{user_id?}','ClockController@shift');
 	Route::post('/shift-detail',array('as' => 'clock.shift','uses' => 'ClockController@postShift'));
 	Route::post('/shift-detail/lists','ClockController@shiftDetailList');
 	
+	Route::get('/payroll-test','PayrollController@test');
+	Route::get('/payroll','PayrollController@index'); 
 	Route::post('/payroll/lists','PayrollController@lists');
+	Route::get('/payroll-custom-report','PayrollController@customReport'); 
+	Route::post('/payroll-custom-report/lists','PayrollController@customReportLists');
 	Route::post('/payroll/store',array('as' => 'payroll.store','uses' => 'PayrollController@store'));
 	Route::get('/payroll/generate/{action}/{payroll_slip_id}','PayrollController@generate');
-	Route::get('/payroll','PayrollController@index'); 
 	Route::get('/payroll/create','PayrollController@create');
+	Route::get('/payroll/create/multiple','PayrollController@createMultiple');
 	Route::get('/payroll/{id}','PayrollController@show');
 	Route::post('/payroll/create',array('as' => 'payroll.create','uses' => 'PayrollController@create'));
+	Route::post('/payroll/create/multiple',array('as' => 'payroll.create-multiple','uses' => 'PayrollController@postCreateMultiple'));
 	Route::delete('/payroll/{id}',array('uses' => 'PayrollController@destroy', 'as' => 'payroll.destroy'));	
 	Route::get('/payroll/{id}/edit','PayrollController@edit');
 	Route::patch('/payroll/{id}/update',array('as' => 'payroll.update','uses' => 'PayrollController@update'));
@@ -305,6 +391,9 @@ Route::group(['middleware' => ['auth','license','account_valid']], function () {
 		Route::get('/message/{id}/download','MessageController@download');
 		Route::get('/message/view/{id}/{token}', array('as' => 'message.view', 'uses' => 'MessageController@view'));
 		Route::get('/message/{id}/delete/{token}', array('as' => 'message.delete', 'uses' => 'MessageController@delete'));
+		Route::post('/message-search', array('as'=>'message.search','uses'=>'MessageController@search'));
+		Route::get('/message/{id}/edit','MessageController@edit');
+		Route::patch('/message/{id}/update',array('as'=>'message.update','uses'=>'MessageController@update'));
 	});
 });
 	

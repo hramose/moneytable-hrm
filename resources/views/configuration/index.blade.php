@@ -23,9 +23,11 @@
 						  <li><a href="#payroll" data-toggle="tab"><span class="fa fa-credit-card"></span> {!! trans('messages.payroll') !!}</a></li>
 						  <li><a href="#mail" data-toggle="tab"><span class="fa fa-envelope"></span> {!! trans('messages.mail') !!}</a></li>
 						  <li><a href="#office-shift" data-toggle="tab"><span class="fa fa-clock-o"></span> {!! trans('messages.office_shift') !!}</a></li>
+						  <li><a href="#qualification" data-toggle="tab"><span class="fa fa-book"></span> {!! trans('messages.qualification') !!}</a></li>
 						  <li><a href="#contract-type" data-toggle="tab"><span class="fa fa-pencil"></span> {!! trans('messages.contract') !!}</a></li>
 						  <li><a href="#award" data-toggle="tab"><span class="fa fa-trophy"></span> {!! trans('messages.award') !!}</a></li>
 						  <li><a href="#leave" data-toggle="tab"><span class="fa fa-coffee"></span> {!! trans('messages.leave') !!}</a></li>
+						  <li><a href="#message" data-toggle="tab"><span class="fa fa-envelope"></span> {!! trans('messages.message') !!}</a></li>
 						  <li><a href="#document" data-toggle="tab"><span class="fa fa-file"></span> {!! trans('messages.document') !!}</a></li>
 						  <li><a href="#salary" data-toggle="tab"><span class="fa fa-money"></span> {!! trans('messages.salary') !!}</a></li>
 						  <li><a href="#expense" data-toggle="tab"><span class="fa fa-credit-card"></span> {!! trans('messages.expense') !!}</a></li>
@@ -172,6 +174,39 @@
 												{!! Form::radio('payroll_contribution_field', '0', (!config('config.payroll_contribution_field')) ? 'checked' : '').' '.trans('messages.no') !!}
 											</label>
 										</div>
+									</div>
+									<div class="form-group">
+										{!! Form::label('payroll_include_day_summary',trans('messages.payroll_include_day_summary'),['class' => ' control-label'])!!}
+										<div class="radio">
+											<label>
+												{!! Form::radio('payroll_include_day_summary', '1', (config('config.payroll_include_day_summary')) ? 'checked' : '').' '.trans('messages.yes') !!}
+											</label>
+											<label>
+												{!! Form::radio('payroll_include_day_summary', '0', (!config('config.payroll_include_day_summary')) ? 'checked' : '').' '.trans('messages.no') !!}
+											</label>
+										</div>
+									</div>
+									<div class="form-group">
+										{!! Form::label('payroll_include_hour_summary',trans('messages.payroll_include_hour_summary'),['class' => ' control-label'])!!}
+										<div class="radio">
+											<label>
+												{!! Form::radio('payroll_include_hour_summary', '1', (config('config.payroll_include_hour_summary')) ? 'checked' : '').' '.trans('messages.yes') !!}
+											</label>
+											<label>
+												{!! Form::radio('payroll_include_hour_summary', '0', (!config('config.payroll_include_hour_summary')) ? 'checked' : '').' '.trans('messages.no') !!}
+											</label>
+										</div>
+								  	</div>
+									<div class="form-group">
+										{!! Form::label('payroll_include_leave_summary',trans('messages.payroll_include_leave_summary'),['class' => ' control-label'])!!}
+										<div class="radio">
+											<label>
+												{!! Form::radio('payroll_include_leave_summary', '1', (config('config.payroll_include_leave_summary')) ? 'checked' : '').' '.trans('messages.yes') !!}
+											</label>
+											<label>
+												{!! Form::radio('payroll_include_leave_summary', '0', (!config('config.payroll_include_leave_summary')) ? 'checked' : '').' '.trans('messages.no') !!}
+											</label>
+										</div>
 								  	</div>
 			  						{!! Form::submit(isset($buttonText) ? $buttonText : trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
 								{!! Form::close() !!}
@@ -227,6 +262,80 @@
 												</tbody>
 											</table>
 										</div>
+									</div>
+								</div>
+								<div class="col-sm-12">
+									<div class="box-info">
+										{!! Form::open(['route' => 'configuration.store','role' => 'form', 'class'=>'configuraiton-role-form','id' => 'configuraiton-role-form','data-no-form-clear' => 1]) !!}
+										
+										  <div class="form-group">
+											{!! Form::label('subordinate',trans('messages.subordinate'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('subordinate', '1', (config('config.subordinate')) ? 'checked' : '') !!} Show All Subordinate
+												</label>
+												<label>
+													{!! Form::radio('subordinate', '0', (!config('config.subordinate')) ? 'checked' : '') !!} Show Direct Subordinate
+												</label>
+											</div>
+										  </div>
+										  <div class="form-group">
+											{!! Form::label('employee_manage_own_contact',trans('messages.employee_manage_own_contact'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('employee_manage_own_contact', '1', (config('config.employee_manage_own_contact')) ? 'checked' : '').' '.trans('messages.yes') !!}
+												</label>
+												<label>
+													{!! Form::radio('employee_manage_own_contact', '0', (!config('config.employee_manage_own_contact')) ? 'checked' : '').' '.trans('messages.no') !!}
+												</label>
+											</div>
+										  </div>
+										  <div class="form-group">
+											{!! Form::label('employee_manage_own_bank_account',trans('messages.employee_manage_own_bank_account'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('employee_manage_own_bank_account', '1', (config('config.employee_manage_own_bank_account')) ? 'checked' : '').' '.trans('messages.yes') !!}
+												</label>
+												<label>
+													{!! Form::radio('employee_manage_own_bank_account', '0', (!config('config.employee_manage_own_bank_account')) ? 'checked' : '').' '.trans('messages.no') !!}
+												</label>
+											</div>
+										  </div>
+										  <div class="form-group">
+											{!! Form::label('employee_manage_own_qualification',trans('messages.employee_manage_own_qualification'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('employee_manage_own_qualification', '1', (config('config.employee_manage_own_qualification')) ? 'checked' : '').' '.trans('messages.yes') !!}
+												</label>
+												<label>
+													{!! Form::radio('employee_manage_own_qualification', '0', (!config('config.employee_manage_own_qualification')) ? 'checked' : '').' '.trans('messages.no') !!}
+												</label>
+											</div>
+										  </div>
+										  <div class="form-group">
+											{!! Form::label('employee_manage_own_work_experience',trans('messages.employee_manage_own_work_experience'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('employee_manage_own_work_experience', '1', (config('config.employee_manage_own_work_experience')) ? 'checked' : '').' '.trans('messages.yes') !!}
+												</label>
+												<label>
+													{!! Form::radio('employee_manage_own_work_experience', '0', (!config('config.employee_manage_own_work_experience')) ? 'checked' : '').' '.trans('messages.no') !!}
+												</label>
+											</div>
+										  </div>
+										  <div class="form-group">
+											{!! Form::label('employee_manage_own_document',trans('messages.employee_manage_own_document'),['class' => ' control-label'])!!}
+											<div class="radio">
+												<label>
+													{!! Form::radio('employee_manage_own_document', '1', (config('config.employee_manage_own_document')) ? 'checked' : '').' '.trans('messages.yes') !!}
+												</label>
+												<label>
+													{!! Form::radio('employee_manage_own_document', '0', (!config('config.employee_manage_own_document')) ? 'checked' : '').' '.trans('messages.no') !!}
+												</label>
+											</div>
+										  </div>
+			  								{!! Form::submit(trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
+										{!! Form::close() !!}
 									</div>
 								</div>
 						    </div>
@@ -299,6 +408,91 @@
 								</div>
 						    </div>
 						  </div>
+						  <div class="tab-pane animated fadeInRight" id="qualification">
+						    <div class="user-profile-content-wm">
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.education_level') !!}</h2>
+											{!! Form::open(['route' => 'education-level.store','role' => 'form', 'class'=>'education-level-form','id' => 'education-level-form','data-table-alter' => 'education-level-table']) !!}
+												@include('education_level._form')
+											{!! Form::close() !!}
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="box-info full">
+											<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.education_level') !!}</h2>
+												<div class="table-responsive">
+													<table data-sortable class="table table-hover table-striped table-ajax-load"  id="education-level-table" data-source="/education-level/lists">
+														<thead>
+															<tr>
+																<th>{!! trans('messages.education_level') !!}</th>
+																<th data-sortable="false">{!! trans('messages.option') !!}</th>
+															</tr>
+														</thead>
+														<tbody>
+														</tbody>
+													</table>
+												</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.language') !!}</h2>
+											{!! Form::open(['route' => 'qualification-language.store','role' => 'form', 'class'=>'qualification-language-form','id' => 'qualification-language-form','data-table-alter' => 'qualification-language-table']) !!}
+												@include('qualification_language._form')
+											{!! Form::close() !!}
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="box-info full">
+											<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.language') !!}</h2>
+												<div class="table-responsive">
+													<table data-sortable class="table table-hover table-striped table-ajax-load"  id="qualification-language-table" data-source="/qualification-language/lists">
+														<thead>
+															<tr>
+																<th>{!! trans('messages.language') !!}</th>
+																<th data-sortable="false">{!! trans('messages.option') !!}</th>
+															</tr>
+														</thead>
+														<tbody>
+														</tbody>
+													</table>
+												</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.skill') !!}</h2>
+											{!! Form::open(['route' => 'qualification-skill.store','role' => 'form', 'class'=>'qualification-skill-form','id' => 'qualification-skill-form','data-table-alter' => 'qualification-skill-table']) !!}
+												@include('qualification_skill._form')
+											{!! Form::close() !!}
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="box-info full">
+											<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.skill') !!}</h2>
+												<div class="table-responsive">
+													<table data-sortable class="table table-hover table-striped table-ajax-load"  id="qualification-skill-table" data-source="/qualification-skill/lists">
+														<thead>
+															<tr>
+																<th>{!! trans('messages.skill') !!}</th>
+																<th data-sortable="false">{!! trans('messages.option') !!}</th>
+															</tr>
+														</thead>
+														<tbody>
+														</tbody>
+													</table>
+												</div>
+										</div>
+									</div>
+								</div>
+						    </div>
+						  </div>
 						  <div class="tab-pane animated fadeInRight" id="contract-type">
 						    <div class="user-profile-content-wm">
 								<div class="row">
@@ -349,6 +543,110 @@
 														<thead>
 															<tr>
 																<th>{!! trans('messages.leave_type') !!}</th>
+																<th data-sortable="false">{!! trans('messages.option') !!}</th>
+															</tr>
+														</thead>
+														<tbody>
+														</tbody>
+													</table>
+												</div>
+										</div>
+									</div>
+									<div class="col-sm-12">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.leave') !!}</strong> {!! trans('messages.approval') !!} </h2>
+											{!! Form::open(['route' => 'configuration.store','role' => 'form', 'class'=>'configuraiton-leave-approval-form','id' => 'configuraiton-leave-approval-form','data-no-form-clear' => 1]) !!}
+											
+											  <div class="form-group">
+												{!! Form::label('leave_approval_level',trans('messages.leave_approval_level'),['class' => ' control-label'])!!}
+												<div class="radio">
+													<label>
+														{!! Form::radio('leave_approval_level', 'single', (config('config.leave_approval_level') == 'single') ? 'checked' : '').' '.trans('messages.single').' '.trans('messages.level') !!}
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														<div class="row">
+															<div class="col-md-6">
+																{!! Form::radio('leave_approval_level', 'multiple', (config('config.leave_approval_level') == 'multiple') ? 'checked' : '').' '.trans('messages.multiple').' '.trans('messages.level') !!}
+															</div>
+															<div class="col-md-6">
+																<input type="number" name="leave_approval_level_multiple" class="form-control" value="{{config('config.leave_approval_level_multiple')}}" placeholder="{{trans('messages.no_of_level')}}">
+															</div>
+														</div>
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														{!! Form::radio('leave_approval_level', 'last', (config('config.leave_approval_level') == 'last') ? 'checked' : '').' '.trans('messages.last').' '.trans('messages.level') !!}
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														<div class="row">
+															<div class="col-md-6">
+																{!! Form::radio('leave_approval_level', 'designation', (config('config.leave_approval_level') == 'designation') ? 'checked' : '').' '.trans('messages.designation') !!}
+															</div>
+															<div class="col-md-6">
+																{!! Form::select('leave_approval_level_detail', [''=>''] + $designations,config('config.leave_approval_level_detail'),['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+															</div>
+														</div>
+													</label>
+												</div>
+											  </div>
+				  								{!! Form::submit(trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
+											{!! Form::close() !!}
+										</div>
+									</div>
+								</div>
+						    </div>
+						  </div>
+						  <div class="tab-pane animated fadeInRight" id="message">
+						    <div class="user-profile-content-wm">
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.category') !!}</h2>
+											{!! Form::open(['route' => 'message-category.store','role' => 'form', 'class'=>'message-category-form','id' => 'message-category-form','data-table-alter' => 'message-category-table']) !!}
+												@include('message_category._form')
+											{!! Form::close() !!}
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="box-info full">
+											<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.category') !!}</h2>
+												<div class="table-responsive">
+													<table data-sortable class="table table-hover table-striped table-ajax-load"  id="message-category-table" data-source="/message-category/lists">
+														<thead>
+															<tr>
+																<th>{!! trans('messages.category') !!}</th>
+																<th data-sortable="false">{!! trans('messages.option') !!}</th>
+															</tr>
+														</thead>
+														<tbody>
+														</tbody>
+													</table>
+												</div>
+										</div>
+									</div>
+								</div>
+								<div class="row">
+									<div class="col-sm-6">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.add_new') !!}</strong> {!! trans('messages.priority') !!}</h2>
+											{!! Form::open(['route' => 'message-priority.store','role' => 'form', 'class'=>'message-priority-form','id' => 'message-priority-form','data-table-alter' => 'message-priority-table']) !!}
+												@include('message_priority._form')
+											{!! Form::close() !!}
+										</div>
+									</div>
+									<div class="col-sm-6">
+										<div class="box-info full">
+											<h2><strong>{!! trans('messages.list_all') !!}</strong> {!! trans('messages.priority') !!}</h2>
+												<div class="table-responsive">
+													<table data-sortable class="table table-hover table-striped table-ajax-load"  id="message-priority-table" data-source="/message-priority/lists">
+														<thead>
+															<tr>
+																<th>{!! trans('messages.priority') !!}</th>
 																<th data-sortable="false">{!! trans('messages.option') !!}</th>
 															</tr>
 														</thead>
@@ -450,6 +748,52 @@
 														</tbody>
 													</table>
 												</div>
+										</div>
+									</div>
+									<div class="col-sm-12">
+										<div class="box-info">
+											<h2><strong>{!! trans('messages.expense') !!}</strong> {!! trans('messages.approval') !!} </h2>
+											{!! Form::open(['route' => 'configuration.store','role' => 'form', 'class'=>'configuraiton-expense-approval-form','id' => 'configuraiton-expense-approval-form','data-no-form-clear' => 1]) !!}
+											
+											  <div class="form-group">
+												{!! Form::label('expense_approval_level',trans('messages.expense_approval_level'),['class' => ' control-label'])!!}
+												<div class="radio">
+													<label>
+														{!! Form::radio('expense_approval_level', 'single', (config('config.expenseapproval_level') == 'single') ? 'checked' : '').' '.trans('messages.single').' '.trans('messages.level') !!}
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														<div class="row">
+															<div class="col-md-6">
+																{!! Form::radio('expense_approval_level', 'multiple', (config('config.expense_approval_level') == 'multiple') ? 'checked' : '').' '.trans('messages.multiple').' '.trans('messages.level') !!}
+															</div>
+															<div class="col-md-6">
+																<input type="number" name="expense_approval_level_multiple" class="form-control" value="{{config('config.expense_approval_level_multiple')}}" placeholder="{{trans('messages.no_of_level')}}">
+															</div>
+														</div>
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														{!! Form::radio('expense_approval_level', 'last', (config('config.expense_approval_level') == 'last') ? 'checked' : '').' '.trans('messages.last').' '.trans('messages.level') !!}
+													</label>
+												</div>
+												<div class="radio">
+													<label>
+														<div class="row">
+															<div class="col-md-6">
+																{!! Form::radio('expense_approval_level', 'designation', (config('config.expense_approval_level') == 'designation') ? 'checked' : '').' '.trans('messages.designation') !!}
+															</div>
+															<div class="col-md-6">
+																{!! Form::select('expense_approval_level_detail', [''=>''] + $designations,config('config.expense_approval_level_detail'),['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
+															</div>
+														</div>
+													</label>
+												</div>
+											  </div>
+				  								{!! Form::submit(trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
+											{!! Form::close() !!}
 										</div>
 									</div>
 								</div>

@@ -28,17 +28,17 @@ Class DocumentController extends Controller{
 				<td>'.$document->title.'</td>
 				<td>'.showDate($document->date_of_expiry).'</td>
 				<td>'.$document->description.'</td>
-				<td>'.(($document->status) ? '<span class="badge badge-success">'.trans('messages.active').'</span>' : '<span class="badge badge-danger">'.trans('messages.in_active').'</span>').'</td>
-				<td>
-					<div class="btn-group btn-group-xs">
-					<a href="/document/download/'.$document->id.'" class="btn btn-xs btn-default" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-download"></i></a>'.
-					(($document->status) ? 
-					'<a href="/document/status/'.$document->id.'" class="btn btn-xs btn-default" data-toggle="tooltip" title="'.trans('messages.make_in_active').'"> <i class="fa fa-ban"></i></a> ' : 
-					'<a href="/document/status/'.$document->id.'" class="btn btn-xs btn-default" data-toggle="tooltip" title="'.trans('messages.make_active').'"> <i class="fa fa-check"></i></a> ') .
-					delete_form(['document.destroy',$document->id]).
-					'</div>
-				</td>
-			</tr>';
+				<td>'.(($document->status) ? '<span class="badge badge-success">'.trans('messages.active').'</span>' : '<span class="badge badge-danger">'.trans('messages.in_active').'</span>').'</td>';
+
+				if(config('config.employee_manage_own_document') || $request->has('show_option')){
+					$data .='<td>
+						<div class="btn-group btn-group-xs">
+						<a href="/document/download/'.$document->id.'" class="btn btn-xs btn-default" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-download"></i></a>'.
+						delete_form(['document.destroy',$document->id]).
+						'</div>
+					</td>';
+				}
+			$data .='</tr>';
 		}
 		return $data;
     }
@@ -111,8 +111,11 @@ Class DocumentController extends Controller{
 	public function filter(Request $request){
 
         $query = Document::whereNotNull('id');
-        if(Entrust::can('manage_all_employee'))
+
+        if(defaultRole())
           $user_lists = User::all()->pluck('full_name_with_designation', 'id')->all();
+        elseif(Entrust::can('manage_all_employee'))
+          $user_lists = User::whereIsHidden(0)->get()->pluck('full_name_with_designation', 'id')->all();
         elseif(Entrust::can('manage_subordinate_employee')){
           $child_designations = Helper::childDesignation(Auth::user()->designation_id,1);
           $childs = User::whereIn('designation_id',$child_designations)->pluck('id');
@@ -191,26 +194,6 @@ Class DocumentController extends Controller{
 			return response()->download($file);
 		else
 			return redirect()->back()->withErrors(trans('messages.file_not_found'));
-	}
-
-	public function changeStatus($id){
-
-		$document = Document::find($id);
-
-		if(!$document)
-			return redirect()->back();
-
-		if(!$this->employeeAccessible($document->User))
-			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
-
-		if($document->status)
-			$document->status = 0;
-		else
-			$document->status = 1;
-
-		$document->save();
-
-		return redirect('/employee/'.$document->User->id."#document")->withSuccess(trans('messages.document').' '.trans('messages.saved'));
 	}
 }
 ?>

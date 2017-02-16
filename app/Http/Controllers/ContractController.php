@@ -79,6 +79,12 @@ Class ContractController extends Controller{
         $data = $request->all();
         $data['user_id'] = $id;
         $data['designation_id'] = $request->input('new_designation_id');
+
+        if($request->input('from_date') <= date('Y-m-d') && $request->input('to_date') >= date('Y-m-d')){
+            $employee->designation_id = $request->input('new_designation_id');
+            $employee->save();
+        }
+
         $contract->fill($data)->save();
 
         $user = \App\User::find($contract->User->id);
@@ -150,6 +156,12 @@ Class ContractController extends Controller{
         $data = $request->all();
         $data['designation_id'] = $request->input('new_designation_id');
         $contract->fill($data)->save();
+
+        if($request->input('from_date') <= date('Y-m-d') && $request->input('to_date') >= date('Y-m-d')){
+            $employee = $contract->User;
+            $employee->designation_id = $request->input('new_designation_id');
+            $employee->save();
+        }
 
         $user = \App\User::find($contract->User->id);
         $user_contract = Helper::getContract($user->id);

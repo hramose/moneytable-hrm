@@ -1,9 +1,32 @@
 
 	<div class="modal-header">
 		<button type="button" class="close" data-dismiss="modal" aria-hidden="true"></button>
-		<h4 class="modal-title">Whats new in Version 3.0?</h4>
+		<h4 class="modal-title">Whats new?</h4>
 	</div>
 	<div class="modal-body">
+		<h4>Version 3.1 <span class="badge badge-danger animated double shake">Latest</span></h4>
+		<div class="row">
+			<div class="col-xs-4">
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Multiple Company Location/Branch</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Login with Email/Username</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Multi-level Attendance Approval</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Employee Self Service</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Optional User Self Registration</p>
+			</div>
+			<div class="col-xs-4">
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> New Subordinate Level</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Multi-level Expense Approval</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Daily Report</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Sub Task</p>
+			</div>
+			<div class="col-xs-4">
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Improved Message Module</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Upload Attendance</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Improved Payroll Template</p>
+				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Task User Rating</p>
+			</div>
+		</div>
+		<h4>Version 3.0</h4>
 		<div class="row">
 			<div class="col-xs-4">
 				<p><i class="fa fa-check-circle success fa-2x" style="vertical-align:middle;"></i> Laravel 5.2 Upgrade</p>

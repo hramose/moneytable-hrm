@@ -16,7 +16,7 @@ class Task extends Eloquent {
 
 	public function user()
     {
-        return $this->belongsToMany('App\User','task_user','task_id','user_id');
+        return $this->belongsToMany('App\User','task_user','task_id','user_id')->withPivot('rating', 'comment','updated_at');
     }
 
 	public function userAdded()
@@ -37,5 +37,9 @@ class Task extends Eloquent {
 	public function taskAttachment()
     {
         return $this->hasMany('App\TaskAttachment');
+    }
+
+    public function subTask(){
+        return $this->hasMany('App\SubTask');
     }
 }

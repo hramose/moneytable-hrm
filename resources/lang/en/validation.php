@@ -73,6 +73,7 @@ return array(
 	"url"                  => trans('messages.validation_url'),
 	"timezone"             => trans('messages.validation_timezone'),
 	"before_equal"         => trans('messages.validation_before_equal'),
+	"after_equal"         => trans('messages.validation_after_equal'),
 
 	/*
 	|--------------------------------------------------------------------------

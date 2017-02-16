@@ -22,7 +22,11 @@
 							@if(Entrust::can('list_holiday'))
 							<li {!! (in_array('holiday',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'holiday') !!}><a href="{!! URL::to('/holiday') !!}"><i class="fa fa-fighter-jet icon"></i> {!! trans('messages.holiday') !!}</a></li>
 							@endif
-							<li {!! (in_array('leave',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'leave') !!}><a href="{!! URL::to('/leave') !!}"><i class="fa fa-coffee icon"></i> {!! trans('messages.leave') !!}</a></li>
+							<li {!! (in_array('leave',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'leave') !!}><a href="{!! URL::to('/leave') !!}"><i class="fa fa-coffee icon"></i> {!! trans('messages.leave') !!} 
+							@if(count($header_leave))
+								<span class="badge badge-danger animated double shake pull-right">{{count($header_leave).' '.trans('messages.request')}}</span>
+							@endif
+							</a></li>
 							<li {!! (in_array('payroll',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'payroll') !!}><a href="{!! URL::to('/payroll') !!}"><i class="fa fa-money icon"></i> {!! trans('messages.payroll') !!}</a></li>
 							@if(Entrust::can('list_announcement'))
 							<li {!! (in_array('announcement',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'announcement') !!}><a href="{!! URL::to('/announcement') !!}"><i class="fa fa-list-alt icon"></i> {!! trans('messages.announcement') !!}</a></li>
@@ -31,7 +35,14 @@
 							<li {!! (in_array('award',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'award') !!}><a href="{!! URL::to('/award') !!}"><i class="fa fa-trophy icon"></i> {!! trans('messages.award') !!}</a></li>
 							@endif
 							@if(Entrust::can('list_expense'))
-							<li {!! (in_array('expense',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'expense') !!}><a href="{!! URL::to('/expense') !!}"><i class="fa fa-credit-card icon"></i> {!! trans('messages.expense') !!}</a></li>
+							<li {!! (in_array('expense',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'expense') !!}><a href="{!! URL::to('/expense') !!}"><i class="fa fa-credit-card icon"></i> {!! trans('messages.expense') !!}
+							@if(count($header_expense))
+								<span class="badge badge-danger animated double shake pull-right">{{count($header_expense).' '.trans('messages.request')}}</span>
+							@endif
+							</a></li>
+							@endif
+							@if(Entrust::can('list_daily_report'))
+							<li {!! (in_array('daily_report',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'daily_report') !!}><a href="{!! URL::to('/daily-report') !!}"><i class="fa fa-bars icon"></i> {!! trans('messages.daily_report') !!}</a></li>
 							@endif
 							@if(Entrust::can('list_task'))
 							<li {!! (in_array('task',$menu)) ? 'class="active"' : '' !!} {!! menuAttr($menus,'task') !!}><a href="{!! URL::to('/task') !!}"><i class="fa fa-tasks icon"></i> {!! trans('messages.task') !!}</a></li>

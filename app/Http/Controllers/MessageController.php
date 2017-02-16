@@ -14,26 +14,48 @@ Class MessageController extends Controller{
 
 	public function inbox(){
 
+        $child_designation = Helper::childDesignation(Auth::user()->designation_id,1);
+        $child_users = \App\User::whereIn('designation_id',$child_designation)->pluck('id')->all();
+        array_push($child_users,Auth::user()->id);
 		$messages = Message::whereToUserId(Auth::user()->id)
 			->whereDeleteReceiver('0')->orderBy('created_at','desc')->get();
+
         $count_inbox = count($messages);
         $count_sent = Message::whereFromUserId(Auth::user()->id)
 			->whereDeleteSender('0')
         	->count();
 
-        $col_heads = [trans('messages.option'),trans('messages.from'),trans('messages.subject'),trans('messages.date_time'),''];
+        $col_heads = [trans('messages.option'),trans('messages.from'),trans('messages.category'),trans('messages.priority'),trans('messages.subject'),trans('messages.date_time'),''];
         $menu = ['message'];
         $table_info = array(
 			'source' => 'message/inbox',
 			'title' => 'Inbox List',
-			'id' => 'message_table'
+			'id' => 'message_table',
+			'form' => 'message_search'
 		);
 
-		return view('message.inbox',compact('count_inbox','count_sent','col_heads','menu','table_info'));
+        if(Entrust::can('message_all_employee'))
+            $users = \App\User::where('id','!=',Auth::user()->id)->get()->pluck('full_name_with_designation', 'id')->all();
+        elseif(Entrust::can('message_subordinate'))
+            $users = \App\User::whereIn('id',$child_users)->get()->pluck('full_name_with_designation', 'id')->all();
+        else
+            $users = [];
+
+        $message_categories = \App\MessageCategory::all()->pluck('name','id')->all();
+        $message_priorities = \App\MessagePriority::all()->pluck('name','id')->all();
+        $locations = \App\Location::all()->pluck('name','id')->all();
+        $status = ['open' => 'Open','close' => 'Close'];
+        $assets = ['search'];
+        $type = 'inbox';
+
+		return view('message.inbox',compact('count_inbox','count_sent','col_heads','menu','table_info','users','message_categories','message_priorities','assets','locations','status','type'));
 	}
 
 	public function sent(){
 
+        $child_designation = Helper::childDesignation(Auth::user()->designation_id,1);
+        $child_users = \App\User::whereIn('designation_id',$child_designation)->pluck('id')->all();
+        array_push($child_users,Auth::user()->id);
 		$messages = Message::whereFromUserId(Auth::user()->id)
 			->whereDeleteSender('0')->orderBy('created_at','desc')->get();
 
@@ -42,31 +64,80 @@ Class MessageController extends Controller{
 			->whereDeleteReceiver('0')
         	->count();
 
-        $col_heads = [trans('messages.option'),trans('messages.to'),trans('messages.subject'),trans('messages.date_time'),''];
+        $col_heads = [trans('messages.option'),trans('messages.to'),trans('messages.category'),trans('messages.priority'),trans('messages.subject'),trans('messages.date_time'),''];
         $menu = ['message'];
         $table_info = array(
 			'source' => 'message/sent',
 			'title' => 'Sent List',
-			'id' => 'message_table'
+			'id' => 'message_table',
+			'form' => 'message_search'
 		);
 
-		return view('message.sent',compact('count_inbox','count_sent','col_heads','menu','table_info'));
+        if(Entrust::can('message_all_employee'))
+            $users = \App\User::where('id','!=',Auth::user()->id)->get()->pluck('full_name_with_designation', 'id')->all();
+        elseif(Entrust::can('message_subordinate'))
+            $users = \App\User::whereIn('id',$child_users)->get()->pluck('full_name_with_designation', 'id')->all();
+        else
+            $users = [];
+
+        $message_categories = \App\MessageCategory::all()->pluck('name','id')->all();
+        $message_priorities = \App\MessagePriority::all()->pluck('name','id')->all();
+        $locations = \App\Location::all()->pluck('name','id')->all();
+        $status = ['open' => 'Open','close' => 'Close'];
+
+        $assets = ['search'];
+        $type = 'sent';
+
+		return view('message.sent',compact('count_inbox','count_sent','col_heads','menu','table_info','assets','users','message_categories','message_priorities','locations','status','type'));
+	}
+
+	public function search(){
+        $response = ['message' => trans('messages.request_submit'), 'status' => 'success']; 
+        return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	}
 
 	public function lists($type, Request $request){
 
+        $child_designation = Helper::childDesignation(Auth::user()->designation_id,1);
+        $child_users = \App\User::whereIn('designation_id',$child_designation)->pluck('id')->all();
+        array_push($child_users,Auth::user()->id);
+
         $token = csrf_token();
-		if($type == 'sent')
-			$messages = Message::whereFromUserId(Auth::user()->id)
-			->whereDeleteSender('0')->orderBy('created_at','desc')->get();
-		else
-			$messages = Message::whereToUserId(Auth::user()->id)
-			->whereDeleteReceiver('0')->orderBy('created_at','desc')->get();
+
+		if($type == 'sent'){
+			$query = Message::whereFromUserId(Auth::user()->id)
+			->whereDeleteSender('0');
+		}
+		else{
+			$query = Message::whereToUserId(Auth::user()->id)
+			->whereDeleteReceiver('0');
+		}
+
+		if($request->has('message_category_id'))
+			$query->whereMessageCategoryId($request->input('message_category_id'));
+
+		if($request->has('message_priority_id'))
+			$query->whereMessageCategoryId($request->input('message_priority_id'));
+
+		if($request->has('status'))
+			$query->whereStatus($request->input('status'));
+
+		if($request->has('user_id') && $type == 'sent')
+			$query->whereToUserId($request->input('user_id'));
+		elseif($request->has('user_id') && $type == 'inbox')
+			$query->whereFromUserId($request->input('user_id'));
+
+		$messages = $query->orderBy('created_at','desc')->get();
+
+		$location = ($request->has('location_id')) ? \App\Location::find($request->input('location_id')) : null;
 
         $rows=array();
         foreach($messages as $message){
 
-			$option = '<a href="/message/view/'.$message->id.'/'.$token.'" class="btn btn-default btn-xs" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-arrow-circle-right"></i></a><a href="/message/'.$message->id.'/delete/'.$token.'" class="btn btn-default btn-xs alert_delete"  data-toggle="tooltip" title="'.trans('messages.delete').'"> <i class="fa fa-trash-o"></i></a>';
+			$option = '<a href="/message/view/'.$message->id.'/'.$token.'" class="btn btn-default btn-xs" data-toggle="tooltip" title="'.trans('messages.view').'"> <i class="fa fa-arrow-circle-right"></i></a><a href="#" data-href="/message/'.$message->id.'/edit" class="btn btn-default btn-xs" data-toggle="modal" data-target="#myModal"> <i class="fa fa-edit" data-toggle="tooltip" title="'.trans('messages.edit').'"></i></a>';
+
+			if(($type == 'sent' && $message->from_user_id == Auth::user()->id) || ($type == 'inbox' && $message->to_user_id == Auth::user()->id))
+			$option .= '<a href="/message/'.$message->id.'/delete/'.$token.'" class="btn btn-default btn-xs alert_delete"  data-toggle="tooltip" title="'.trans('messages.delete').'"> <i class="fa fa-trash-o"></i></a>';
 			
 			if($type != 'sent'){
 				$source = $message->UserFrom->full_name_with_designation;
@@ -75,8 +146,16 @@ Class MessageController extends Controller{
 			} else
 				$source = $message->UserTo->full_name_with_designation;
 
+			if($type == 'sent')
+				$user_location = Helper::getLocation(date('Y-m-d',strtotime($message->created_at)),$message->to_user_id);
+			else
+				$user_location = Helper::getLocation(date('Y-m-d',strtotime($message->created_at)),$message->from_user_id);
+
+			if(!$location || ($location && $location->name == $user_location))
 			$rows[] = array('<div class="btn-group btn-group-xs">'.$option.'</div>', 
-					$source,
+					$source.' '.(($message->status == 'open') ? '<span class="label label-danger">Open</span>': '<span class="label label-success">Close</span>'),
+					$message->MessageCategory->name,
+					$message->MessagePriority->name,
 					e($message->subject),
 					showDateTime($message->created_at),
 					($message->attachments != '') ? '<i class="fa fa-paperclip"></i>' : ''
@@ -106,9 +185,12 @@ Class MessageController extends Controller{
 			->whereDeleteSender('0')
         	->count();
 
+        $message_categories = \App\MessageCategory::all()->pluck('name','id')->all();
+        $message_priorities = \App\MessagePriority::all()->pluck('name','id')->all();
+
         $assets = ['rte'];
         $menu = ['message'];
-		return view('message.compose',compact('users','count_inbox','count_sent','assets','menu'));
+		return view('message.compose',compact('users','count_inbox','count_sent','assets','menu','message_categories','message_priorities'));
 	}
 
 	public function store(MessageRequest $request){	
@@ -126,6 +208,8 @@ Class MessageController extends Controller{
 
 		$message = new Message;
 	    $message->fill($data);
+	    $message->message_category_id = $request->input('message_category_id');
+	    $message->message_priority_id = $request->input('message_priority_id');
 	    $message->body = clean($request->input('body'));
 	    $message->from_user_id = Auth::user()->id;
 	    $message->is_read = 0;
@@ -141,7 +225,11 @@ Class MessageController extends Controller{
 	}
 
 	public function download($id){
-		$message = Message::find($id);
+
+		$message = Message::whereId($id)->where(function($query){
+			$query->where('from_user_id','=',\Auth::user()->id)
+				->orWhere('to_user_id','=',\Auth::user()->id);
+		})->first();
 
 		if(!$message)
 			return redirect('/message')->withErrors(trans('messages.invalid_link'));
@@ -156,12 +244,57 @@ Class MessageController extends Controller{
 			return redirect()->back()->withErrors(trans('messages.file_not_found'));
 	}
 
+	public function edit($id){
+
+		$message = Message::whereId($id)->where(function($query){
+			$query->where('from_user_id','=',\Auth::user()->id)
+				->orWhere('to_user_id','=',\Auth::user()->id);
+		})->first();
+
+		if(!$message)
+            return view('common.error',['message' => trans('messages.permission_denied')]);
+
+		$message_priorities = \App\MessagePriority::all()->pluck('name','id')->all();
+        $status = ['open' => 'Open','close' => 'Close'];
+
+		return view('message.edit',compact('message','message_priorities','status'));
+	}
+
+	public function update(Request $request, $id){
+
+		$message = Message::whereId($id)->where(function($query){
+			$query->where('from_user_id','=',\Auth::user()->id)
+				->orWhere('to_user_id','=',\Auth::user()->id);
+		})->first();
+
+		if(!$message){
+	        if($request->has('ajax_submit')){
+	            $response = ['message' => trans('messages.invalid_link'), 'status' => 'error']; 
+	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+	        }
+			return redirect('/message')->withErrors(trans('messages.invalid_link'));
+		}
+
+		$message->status = $request->input('status');
+		$message->message_priority_id = $request->input('message_priority_id');
+		$message->save();
+
+        if($request->has('ajax_submit')){
+            $response = ['message' => trans('messages.status').' '.trans('messages.updated'), 'status' => 'success']; 
+            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
+        }
+		return redirect('/message')->withSuccess(trans('messages.status').' '.trans('messages.updated'));
+	}
+
 	public function view($id,$token){
 
 	    if(!Helper::verifyCsrf($token))
 	      return redirect('/dashboard')->withErrors(trans('messages.invalid_token'));
 
-		$message = Message::find($id);
+		$message = Message::whereId($id)->where(function($query){
+			$query->where('from_user_id','=',\Auth::user()->id)
+				->orWhere('to_user_id','=',\Auth::user()->id);
+		})->first();
 
 		if(!$message)
 			return redirect('/message')->withErrors(trans('messages.invalid_link'));
@@ -203,6 +336,8 @@ Class MessageController extends Controller{
 		$message = Message::find($id);
 		if(!$message || ($message->to_user_id != Auth::user()->id && $message->from_user_id != Auth::user()->id))
 			return redirect('/message')->withErrors(trans('messages.invalid_link'));
+
+		$this->logActivity(['module' => 'message','unique_id' => $message->id,'activity' => 'activity_deleted']);
 
 		if($message->to_user_id == Auth::user()->id)
 		$message->delete_receiver = 1;

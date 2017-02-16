@@ -35,6 +35,12 @@
 					@include('common.datatable',['col_heads' => $col_heads])
 				</div>
 			</div>
+			<div class="col-sm-12">
+				<div class="box-info">
+					<h2><strong>Hierarchy</strong></h2>
+					<div id="designation-hierarchy"></div>
+				</div>
+			</div>
 		</div>
 
 	@stop

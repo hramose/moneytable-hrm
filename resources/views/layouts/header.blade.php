@@ -16,11 +16,12 @@
 							
 							<ul class="nav navbar-nav navbar-right top-navbar">
 							@if(!config('code.mode'))
-							<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.0?</strong></a></li>
+							<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.1?</strong></a></li>
 							@endif
 							<li>
 								<a href="#" data-href="/todo" data-toggle='modal' data-target='#myModal' id="to-do-modal"><i class="fa fa-list-ul fa-lg" data-toggle="tooltip" title="{!! trans('messages.to_do') !!}" data-placement="bottom"></i></a>
 							</li>
+							@if(config('config.multilingual'))
 							<li class="dropdown">
 								<a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-language fa-lg icon" data-toggle="tooltip" title="{!! trans('messages.language') !!}" data-placement="bottom"></i> </a>
 								<ul class="dropdown-menu animated half flipInX">
@@ -34,9 +35,11 @@
 									@endif
 								</ul>
 							</li>
+							@endif
 
 							@if(defaultRole() || Entrust::can('manage_configuration') || Entrust::can('manage_custom_field') || Entrust::can('manage_template') ||
-							Entrust::can('list_department') || Entrust::can('list_designation') || Entrust::can('manage_email_log') || Entrust::can('manage_backup')
+							Entrust::can('list_department') ||
+							Entrust::can('list_location') || Entrust::can('list_designation') || Entrust::can('manage_email_log') || Entrust::can('manage_backup') || Entrust::can('upload_attendance')
 							)
 								<li class="dropdown"><a href="#" class="dropdown-toggle" data-toggle="dropdown"><i class="fa fa-cog fa-lg" data-toggle="tooltip" title="{!! trans('messages.configuration') !!}" data-placement="bottom"></i></a>
 									<ul class="dropdown-menu animated half flipInX">
@@ -45,6 +48,9 @@
 									@endif
 									@if(defaultRole() || Entrust::can('manage_configuration'))
 										<li><a href="/permission">{!! trans('messages.permission') !!}</a></li>
+									@endif
+									@if(Entrust::can('list_location'))
+										<li><a href="/location">{!! trans('messages.location') !!}</a></li>
 									@endif
 									@if(Entrust::can('list_department'))
 										<li><a href="/department">{!! trans('messages.department') !!}</a></li>
@@ -55,7 +61,7 @@
 									@if(Entrust::can('manage_custom_field'))
 										<li><a href="/custom-field">{!! trans('messages.custom_field') !!}</a></li>
 									@endif
-									@if(Entrust::can('manage_language'))
+									@if(Entrust::can('manage_language') && config('config.multilingual'))
 									<li><a href="/language">{!! trans('messages.language') !!}</a></li>
 									@endif
 									@if(Entrust::can('manage_template'))
@@ -66,6 +72,9 @@
 									@endif
 									@if(Entrust::can('manage_backup'))
 									<li><a href="/backup">{!! trans('messages.backup').' '.trans('messages.log') !!}</a></li>
+									@endif
+									@if(Entrust::can('upload_attendance'))
+									<li><a href="/attendance-upload-log">{!! trans('messages.attendance').' '.trans('messages.upload').' '.trans('messages.log') !!}</a></li>
 									@endif
 									</ul>
 								</li>
@@ -119,16 +128,16 @@
 											</li>
 											@else
 												<li class="dropdown-header notif-header">{!! trans('messages.new_leave') !!}</li>
-												@foreach($header_leave->take(5) as $leave)
+												@foreach($header_leave->take(5) as $leave_status_detail)
 												<li class="unread">
-												<a href="/leave/{{ $leave->id }}">
-														{!! \App\Classes\Helper::getAvatar($leave->user_id) !!}
+												<a href="/leave/{{ $leave_status_detail->Leave->id }}">
+														{!! \App\Classes\Helper::getAvatar($leave_status_detail->Leave->user_id) !!}
 														<div style="margin-left:75px;">
-														<strong>{!! $leave->User->full_name !!}</strong><br />
-														<p><i>{!! showDateTime($leave->created_at) !!}</i><br />
-														{!! $leave->LeaveType->name.' 
-														from '.showDate($leave->from_date).' 
-														to '.showDate($leave->to_date) !!}</p>
+														<strong>{!! $leave_status_detail->Leave->User->full_name !!}</strong><br />
+														<p><i>{!! showDateTime($leave_status_detail->Leave->created_at) !!}</i><br />
+														{!! $leave_status_detail->Leave->LeaveType->name.' 
+														from '.showDate($leave_status_detail->Leave->from_date).' 
+														to '.showDate($leave_status_detail->Leave->to_date) !!}</p>
 														</div>
 													</a>
 												</li>
@@ -152,12 +161,12 @@
 									<ul class="dropdown-menu animated half flipInX">
 										<li><a href="/profile">{!! trans('messages.my').' '.trans('messages.profile') !!}</a></li>
 										<li><a href="#" data-href="/change-password" data-toggle='modal' data-target='#myModal'>{!! trans('messages.change_password') !!}</a></li>
-										@if(config('code.mode'))
+										@if(config('code.mode') && defaultRole())
 										<li><a href="#" data-href="/check-update" data-toggle='modal' data-target='#myModal'>{!! trans('messages.check').' '.trans('messages.update') !!}</a></li>
 										<li><a href="/release-license">{!! trans('messages.release_license') !!}</a></li>
+										<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.1?</strong></a></li>
 										@endif
 										<li><a href="/logout">{!! trans('messages.logout') !!}</a></li>
-										<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.0?</strong></a></li>
 									</ul>
 								</li>
 							</ul>

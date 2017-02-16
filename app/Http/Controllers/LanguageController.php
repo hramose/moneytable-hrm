@@ -13,7 +13,22 @@ use App;
 Class LanguageController extends Controller{
     use BasicController;
 
+	public function __construct()
+	{
+		$this->middleware('multilingual');
+	}
+
 	public function index(){
+
+		// $languages = config('language');
+		// $translation = array();
+		// foreach($languages as $key => $value){
+		// 	$translation[$key] = $value['value'];
+		// }
+		// $filename = base_path().'/resources/lang/en/messages.php';
+		// File::put($filename,var_export($translation, true));
+		// File::prepend($filename,'<?php return ');
+		// File::append($filename, ';');
 
 		if(!Entrust::can('manage_language'))
 			return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
@@ -81,7 +96,7 @@ Class LanguageController extends Controller{
 		File::prepend($filename,'<?php return ');
 		File::append($filename, ';');
 
-		$this->logActivity(['module' => 'language','activity' => 'activity_language_plugin_updated']);
+		$this->logActivity(['module' => 'language_plugin','activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.language_plugin').' '.trans('messages.updated'), 'status' => 'success']; 
@@ -204,7 +219,7 @@ Class LanguageController extends Controller{
 		session(['lang' => $locale]);
 		App::setLocale($locale);
 
-		$this->logActivity(['module' => 'language','activity' => 'activity_language_switched']);
+		$this->logActivity(['module' => 'language','activity' => 'activity_switched']);
 
 		return redirect()->back()->withSuccess(trans('messages.language').' '.trans('messages.switched'));
 	}
@@ -242,7 +257,7 @@ Class LanguageController extends Controller{
 		File::prepend($filename,'<?php return ');
 		File::append($filename, ';');
 
-		$this->logActivity(['module' => 'language','activity' => 'activity_language_translation_word_added']);
+		$this->logActivity(['module' => 'translation_word','activity' => 'activity_added']);
 		
 		return redirect()->back()->withSuccess(trans('messages.word_or_sentence').' '.trans('messages.added'));	
 	}
@@ -268,7 +283,7 @@ Class LanguageController extends Controller{
 		File::prepend($filename,'<?php return ');
 		File::append($filename, ';');
 
-		$this->logActivity(['module' => 'language','activity' => 'activity_language_translation_updated']);
+		$this->logActivity(['module' => 'language_translation','activity' => 'activity_updated']);
 
         if($request->has('ajax_submit')){
             $response = ['message' => trans('messages.language_translation').' '.trans('messages.updated'), 'status' => 'success']; 

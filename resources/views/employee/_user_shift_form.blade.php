@@ -17,6 +17,8 @@
 							{!! Form::select('office_shift_id', [null=>trans('messages.select_one')] + $office_shifts,isset($user_shift->office_shift_id) ? $user_shift->office_shift_id : '',['class'=>'form-control input-xlarge select2me','placeholder'=>trans('messages.select_one')])!!}
 						</div>
 					</div>
-				  	{!! Form::submit(isset($buttonText) ? $buttonText : trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
 				</div>
+				<div class="form-group">
+			  		{!! Form::submit(isset($buttonText) ? $buttonText : trans('messages.save'),['class' => 'btn btn-primary pull-right']) !!}
+			  	</div>
 				<div class="clear"></div>

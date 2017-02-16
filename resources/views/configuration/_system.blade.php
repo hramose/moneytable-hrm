@@ -59,6 +59,39 @@
 				</div>
 			  </div>
 			  <div class="form-group">
+			    {!! Form::label('enable_registration',trans('messages.enable').' '.trans('messages.registration'),['class' => 'control-label '])!!}
+				<div class="radio">
+					<label>
+						{!! Form::radio('enable_registration', '1', (config('config.enable_registration') == '1') ? 'checked' : '').' '.trans('messages.enable') !!}
+					</label>
+					<label>
+						{!! Form::radio('enable_registration', '0', (config('config.enable_registration') == '0') ? 'checked' : '').' '.trans('messages.disable') !!}
+					</label>
+				</div>
+			  </div>
+			  <div class="form-group">
+			    {!! Form::label('login_with',trans('messages.login').' '.trans('messages.with'),['class' => 'control-label '])!!}
+				<div class="radio">
+					<label>
+						{!! Form::radio('login_with', 'email', (config('config.login_with') == 'email') ? 'checked' : '').' '.trans('messages.email') !!}
+					</label>
+					<label>
+						{!! Form::radio('login_with', 'username', (config('config.login_with') == 'username') ? 'checked' : '').' '.trans('messages.username') !!}
+					</label>
+				</div>
+			  </div>
+			  <div class="form-group">
+			    {!! Form::label('multilingual',trans('messages.multilingual'),['class' => 'control-label '])!!}
+				<div class="radio">
+					<label>
+						{!! Form::radio('multilingual', 1, (config('config.multilingual') == 1) ? 'checked' : '').' '.trans('messages.show') !!}
+					</label>
+					<label>
+						{!! Form::radio('multilingual', 0, (config('config.multilingual') == 0) ? 'checked' : '').' '.trans('messages.hide') !!}
+					</label>
+				</div>
+			  </div>
+			  <div class="form-group">
 			    {!! Form::label('error_display',trans('messages.error_display'),['class' => 'control-label '])!!}
 				<div class="radio">
 					<label>

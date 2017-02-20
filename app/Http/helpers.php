@@ -7,8 +7,8 @@ function delete_form($param, $name = '', $data_table_row_delete = 0, $label = ''
 }
 
 function checkDBConnection(){
-	$link = @mysqli_connect(config('database.connections.primary.host'), 
-		config('database.connections.primary.username'), 
+	$link = @mysqli_connect(config('database.connections.primary.host'),
+		config('database.connections.primary.username'),
 		config('database.connections.primary.password'));
 
 	if($link)
@@ -59,7 +59,7 @@ function backupDatabase(){
         $db_export->dump($filename);
         return ['status' => 'success','filename' => $filename];
     } catch(\App\Classes\Shuttle_Exception $e) {
-        $message = $e->getMessage(); 
+        $message = $e->getMessage();
         return ['status' => 'error'];
     }
 }
@@ -85,60 +85,19 @@ function defaultDB(){
         ]);
 }
 
-function installPurchase($purchase_code,$envato_username,$email = ''){
-    $url = config('constants.path.verifier')."installer";
-    $postData = array(
-        'envato_username' => $envato_username,
-        'purchase_code' => $purchase_code,
-        'product_code' => config('constants.item_code'),
-        'email' => $email,
-        'api_version' => '2',
-        'install_url' => \Request::url()
-    );
-	$ch = curl_init($url);
-    curl_setopt_array($ch, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $postData
-    ));
-    $data = curl_exec($ch);
-    return json_decode($data,true);
+function installPurchase($purchase_code = '',$envato_username = '',$email = ''){
+		$data['status'] = 'success';
+    return $data;
 }
 
-function complete($purchase_code){
-    $url = config('constants.path.verifier')."activate";
-    $postData = array(
-        'purchase_code' => $purchase_code,
-        'install_url' => \Request::url()
-    );
-    $ch = curl_init($url);
-    curl_setopt_array($ch, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $postData
-    ));
-    $data = curl_exec($ch);
-    return json_decode($data,true);
+function complete($purchase_code = ''){
+	$data['status'] = 'success';
+    return $data;
 }
 
 function verifyPurchase($purchase_code = ''){
-	$purchase_code = ($purchase_code != '') ? $purchase_code : config('code.purchase_code');
-    $url = config('constants.path.verifier')."verifier";
-    $postData = array(
-        'purchase_code' => $purchase_code,
-        'install_url' => \Request::url()
-    );
-	$ch = curl_init($url);
-    curl_setopt_array($ch, array(
-        CURLOPT_URL => $url,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_POST => true,
-        CURLOPT_POSTFIELDS => $postData
-    ));
-    $data = curl_exec($ch);
-    return json_decode($data,true);
+	$data['status'] = 'success';
+	return $data;
 }
 
 function releaseLicense(){
@@ -188,7 +147,7 @@ function write2Config($data,$file){
 
 function is_connected()
 {
-    $connected = @fsockopen("www.google.com", 80); 
+    $connected = @fsockopen("www.google.com", 80);
     if ($connected){
         $is_conn = true;
         fclose($connected);
@@ -217,7 +176,7 @@ function showMessage() {
                 <b>$error</b>
             </div>";
 
-	} 
+	}
 	elseif (Session::has('success')) {
 
 		$success = Session::get('success');

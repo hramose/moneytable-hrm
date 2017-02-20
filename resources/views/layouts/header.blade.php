@@ -3,7 +3,7 @@
 				<button class="button-menu-mobile show-sidebar">
 					<i class="fa fa-bars"></i>
 				</button>
-				
+
 				<div class="navbar navbar-default flip" role="navigation">
 					<div class="container">
 						<div class="navbar-header">
@@ -11,9 +11,9 @@
 								<i class="fa fa-angle-double-down"></i>
 							</button>
 						</div>
-						
+
 						<div class="navbar-collapse collapse">
-							
+
 							<ul class="nav navbar-nav navbar-right top-navbar">
 							@if(!config('code.mode'))
 							<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.1?</strong></a></li>
@@ -135,8 +135,8 @@
 														<div style="margin-left:75px;">
 														<strong>{!! $leave_status_detail->Leave->User->full_name !!}</strong><br />
 														<p><i>{!! showDateTime($leave_status_detail->Leave->created_at) !!}</i><br />
-														{!! $leave_status_detail->Leave->LeaveType->name.' 
-														from '.showDate($leave_status_detail->Leave->from_date).' 
+														{!! $leave_status_detail->Leave->LeaveType->name.'
+														from '.showDate($leave_status_detail->Leave->from_date).'
 														to '.showDate($leave_status_detail->Leave->to_date) !!}</p>
 														</div>
 													</a>
@@ -161,11 +161,11 @@
 									<ul class="dropdown-menu animated half flipInX">
 										<li><a href="/profile">{!! trans('messages.my').' '.trans('messages.profile') !!}</a></li>
 										<li><a href="#" data-href="/change-password" data-toggle='modal' data-target='#myModal'>{!! trans('messages.change_password') !!}</a></li>
-										@if(config('code.mode') && defaultRole())
+										<!-- @if(config('code.mode') && defaultRole())
 										<li><a href="#" data-href="/check-update" data-toggle='modal' data-target='#myModal'>{!! trans('messages.check').' '.trans('messages.update') !!}</a></li>
 										<li><a href="/release-license">{!! trans('messages.release_license') !!}</a></li>
 										<li><a href="#" data-href="/whats-new" data-toggle="modal" data-target="#myModal"><strong>Whats New in 3.1?</strong></a></li>
-										@endif
+										@endif -->
 										<li><a href="/logout">{!! trans('messages.logout') !!}</a></li>
 									</ul>
 								</li>
@@ -174,4 +174,3 @@
 					</div>
 				</div>
             </div>
-				

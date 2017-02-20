@@ -35,7 +35,7 @@ Class AccountController extends Controller{
 
     	if(!is_connected()){
 	        if($request->has('ajax_submit')){
-	            $response = ['message' => trans('messages.check_internet_connection'), 'status' => 'error']; 
+	            $response = ['message' => trans('messages.check_internet_connection'), 'status' => 'error'];
 	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	        }
     		return redirect('/update')->withErrors(trans('messages.check_internet_connection'));
@@ -49,7 +49,7 @@ Class AccountController extends Controller{
 
 		if($data['status'] != 'success'){
 	        if($request->has('ajax_submit')){
-	            $response = ['message' => $data['message'], 'status' => 'error']; 
+	            $response = ['message' => $data['message'], 'status' => 'error'];
 	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	        }
 			return redirect('/update')->withInput()->withErrors($data['message']);
@@ -57,7 +57,7 @@ Class AccountController extends Controller{
 
 		if (!is_writable('../config/db.php')){
 	        if($request->has('ajax_submit')){
-	            $response = ['message' => 'db.php file is not writable.', 'status' => 'error']; 
+	            $response = ['message' => 'db.php file is not writable.', 'status' => 'error'];
 	            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 	        }
 			return redirect('/update')->withInput()->withErrors('db.php file is not writable.');
@@ -67,7 +67,7 @@ Class AccountController extends Controller{
 
 			if (!$link){
 		        if($request->has('ajax_submit')){
-		            $response = ['message' => 'Connection could not be established.', 'status' => 'error']; 
+		            $response = ['message' => 'Connection could not be established.', 'status' => 'error'];
 		            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 		        }
 				return redirect('/update')->withInput()->withErrors('Connection could not be established.');
@@ -79,14 +79,14 @@ Class AccountController extends Controller{
 
 					if (!is_file('../database/'.config('code.build').'.sql')){
 				        if($request->has('ajax_submit')){
-				            $response = ['message' => 'Database file not found.', 'status' => 'error']; 
+				            $response = ['message' => 'Database file not found.', 'status' => 'error'];
 				            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 				        }
 						return redirect('/update')->withInput()->withErrors('Database file not found.');
 					}
 					elseif(!$count_table){
 				        if($request->has('ajax_submit')){
-				            $response = ['message' => 'No existing table found in database. Please check database.', 'status' => 'error']; 
+				            $response = ['message' => 'No existing table found in database. Please check database.', 'status' => 'error'];
 				            return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
 				        }
 						return redirect('/update')->withInput()->withErrors('No existing table found in database. Please check database.');
@@ -103,7 +103,7 @@ Class AccountController extends Controller{
 							{
 								mysqli_query($link,$templine) or print('Error performing query \'<strong>' . $templine . '\': ' . mysql_error() . '<br /><br />');
 								$templine = '';
-							}	
+							}
 						}
 
 						$db = config('db');
@@ -112,12 +112,12 @@ Class AccountController extends Controller{
 						$db['username'] = $request->input('mysql_username');
 						$db['password'] = $request->input('mysql_password');
 						write2Config($db,'db');
-						
+
 						$config = config('code');
 						$config['purchase_code'] = $purchase_code;
 						complete($purchase_code);
 						write2Config($config,'code');
-						
+
 						return redirect('/')->withSuccess('Updated successfully.');
 					}
 				}
@@ -151,7 +151,7 @@ Class AccountController extends Controller{
    public function releaseLicense(){
     	if(!config('code.mode') || !defaultRole())
     		return redirect('/dashboard');
-    	
+
         if(!is_connected())
             return redirect('/dashboard')->withErrors(trans('messages.check_internet_connection'));
 
@@ -222,8 +222,8 @@ Class AccountController extends Controller{
 	    $p = '#(\.0+)+($|-)#';
 	    $ver1 = preg_replace($p, '', $ver1);
 	    $ver2 = preg_replace($p, '', $ver2);
-	    return isset($operator) ? 
-	        version_compare($ver1, $ver2, $operator) : 
+	    return isset($operator) ?
+	        version_compare($ver1, $ver2, $operator) :
 	        version_compare($ver1, $ver2);
 	}
 
@@ -245,19 +245,18 @@ Class AccountController extends Controller{
 
     	if(!is_connected())
     		return redirect()->back()->withErrors(trans('messages.check_internet_connection'));
-    	
-		$purchase_code = $request->input('purchase_code');
-		$envato_username = $request->input('envato_username');
+
+
 		$registered_email = $request->input('email');
 		$mysql_database = $request->input('mysql_database');
-		$data = installPurchase($purchase_code,$envato_username,$registered_email);
+		$data = installPurchase();
 
 		if($data['status'] != 'success')
 			return redirect()->back()->withInput()->withErrors($data['message']);
-		
+
         if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
             if($request->has('ajax_submit')){
-                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error'];
                 return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
             }
             return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
@@ -267,7 +266,7 @@ Class AccountController extends Controller{
 			return redirect()->back()->withInput()->withErrors('db.php file is not writable.');
 		else{
 			$link = @mysqli_connect($request->input('hostname'), $request->input('mysql_username'), $request->input('mysql_password'));
-			
+
 			if (!$link)
 				return redirect()->back()->withInput()->withErrors('Connection could not be established.');
 			else{
@@ -292,9 +291,9 @@ Class AccountController extends Controller{
 								{
 									mysqli_query($link,$templine) or print('Error performing query \'<strong>' . $templine . '\': ' . mysql_error() . '<br /><br />');
 									$templine = '';
-								}	
+								}
 							}
-							
+
 							$username = $request->input('username');
 							$password = bcrypt($request->input('password'));
 							$email = $request->input('email');
@@ -303,12 +302,12 @@ Class AccountController extends Controller{
 							$default_role = config('constants.default_role');
 							$default_department = config('constants.default_department');
 							$default_designation = config('constants.default_designation');
-							
+
 							mysqli_query($link, "insert into roles(name,is_hidden) values('$default_role','1')");
 							mysqli_query($link, "insert into departments(name,is_hidden) values('$default_department','1')");
 							mysqli_query($link, "insert into designations(department_id,name,is_hidden) values('1','$default_designation',1)");
 							mysqli_query($link, "insert into users(email,username,password,is_hidden,designation_id,first_name,last_name) values('$email','$username','$password','1','1','$first_name','$last_name') ");
-							mysqli_query($link, "insert into profiles(user_id) values('1') ");	
+							mysqli_query($link, "insert into profiles(user_id) values('1') ");
 							mysqli_query($link, "insert into role_user(user_id,role_id) values('1','1') ");
 
     						$db = config('db');
@@ -319,13 +318,13 @@ Class AccountController extends Controller{
 							write2Config($db,'db');
 
 							$config = config('code');
-							$config['purchase_code'] = $purchase_code;
+							$config['purchase_code'] = '';
 							complete($purchase_code);
 							write2Config($config,'code');
 							return redirect('/')->withSuccess('Installed successfully.');
 						}
 					}
-						
+
 				}
 			}
 

@@ -1,6 +1,6 @@
 <?php
 return [
-    'default_title' => 'Employer Zone | Ultimate Human Resource Manager',
+    'default_title' => 'Moneytable | Human Resource Manager',
     'path' => [
         'country' => '/config/country.php',
         'timezone' => '/config/timezone.php',
@@ -21,10 +21,10 @@ return [
         'backup' => 'uploads/backup/',
     ],
     'system_default' => [
-        'application_name' => 'Employer Zone',
-        'timezone_id' => '266',
-        'default_currency' => 'Dollar',
-        'default_currency_symbol' => '$',
+        'application_name' => 'Moneytable HRM',
+        'timezone_id' => '258',
+        'default_currency' => 'Thai Baht',
+        'default_currency_symbol' => '‎฿',
         'default_language' => 'en',
         'direction' => 'ltr',
         'allowed_upload_file' => 'pdf,doc,docx,xls,xlsx,jpg,jpeg',
@@ -34,7 +34,7 @@ return [
         'logo' => 'logo.png',
         'application_setup_info' => '1',
         'textarea_limit' => '300',
-        'notification_position' => 'toast-bottom-right',
+        'notification_position' => 'toast-top-right',
         'installation_path' => 1,
         'celebration_days' => 30,
         'multilingual' => 1,
@@ -51,8 +51,8 @@ return [
     ],
     'mail_default' => [
         'driver' => 'log',
-        'from_name' => 'Mailer Employer Zone',
-        'from_address' => 'mail@yourcompany.com'
+        'from_name' => 'Moneytable HRM',
+        'from_address' => 'hrm@moneytable.com'
     ],
     'default_role' => 'admin',
     'default_department' => 'System Administration',

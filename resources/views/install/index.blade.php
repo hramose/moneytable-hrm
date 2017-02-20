@@ -1,13 +1,10 @@
 @extends('layouts.install')
 
 	@section('content')
-		<a class="btn btn-primary btn-sm pull-right" style='margin:15px;' role="button" href="http://support.wmlab.in" target=_blank>Documentation</a>
-		<a class="btn btn-warning btn-sm pull-right" style='margin:15px;' role="button" href="https://www.youtube.com/watch?v=6NvqWoIPOKs" target=_blank>Installation Video</a>
-		<a class="btn btn-success btn-sm pull-right" style='margin:15px;' role="button" href="/update">Update Employer Zone</a>
 		<div class="full-content-center-more animated fadeInDownBig">
 			<div class="login-wrap">
 				<div class="box-info full">
-				
+
 					{!! Form::open(['route' => 'install.store','class' => 'install-form','id' => 'myWizard'])!!}
 					<section class="step" data-step-title="Installation Guide">
 							<div class="row">
@@ -79,12 +76,6 @@
 								  </div>
 								  <div class="form-group">
 									{!! Form::input('password','password','',['class'=>'form-control','placeholder'=>'Enter Password'])!!}
-								  </div>
-								  <div class="form-group">
-									{!! Form::input('text','envato_username','',['class'=>'form-control','placeholder'=>'Enter Envato Username'])!!}
-								  </div>
-								  <div class="form-group">
-									{!! Form::input('text','purchase_code','',['class'=>'form-control','placeholder'=>'Enter Purchase Code'])!!}
 								  </div>
 								  {!! Form::submit('Install',['class' => 'btn btn-primary pull-right']) !!}
 								</div>

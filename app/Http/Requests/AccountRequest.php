@@ -31,8 +31,6 @@ class AccountRequest extends Request
             'last_name' => 'required',
             'username' => 'required',
             'password' => 'required',
-            'envato_username' => 'required',
-            'purchase_code' => 'required',
         ];
     }
 }

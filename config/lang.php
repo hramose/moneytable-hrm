@@ -8,4 +8,13 @@
     'datepicker' => 'en',
     'validation' => 'en',
   ),
+  'th' => 
+  array (
+    'language' => 'Thai',
+    'calendar' => 'th',
+    'datatable' => 'Thai',
+    'datetimepicker' => 'th',
+    'datepicker' => 'th',
+    'validation' => 'th',
+  ),
 );

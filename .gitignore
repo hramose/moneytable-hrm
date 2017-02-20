@@ -11,6 +11,9 @@ bootstrap/cache/
 .env.php
 .env
 
+# Project Specific
+config/db.php
+config/lang.php
 
 public/storage
 storage/

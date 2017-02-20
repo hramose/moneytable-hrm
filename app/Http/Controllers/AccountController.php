@@ -319,7 +319,7 @@ Class AccountController extends Controller{
 
 							$config = config('code');
 							$config['purchase_code'] = '';
-							complete($purchase_code);
+							complete();
 							write2Config($config,'code');
 							return redirect('/')->withSuccess('Installed successfully.');
 						}

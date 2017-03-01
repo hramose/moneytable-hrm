@@ -3,28 +3,9 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Illuminate\Contracts\Auth\Guard;
 
-class RedirectIfAuthenticated
+class HrmAuthenticated
 {
-    /**
-     * The Guard implementation.
-     *
-     * @var Guard
-     */
-    protected $auth;
-
-    /**
-     * Create a new filter instance.
-     *
-     * @param  Guard  $auth
-     * @return void
-     */
-    public function __construct(Guard $auth)
-    {
-        $this->auth = $auth;
-    }
-
     /**
      * Handle an incoming request.
      *
@@ -37,7 +18,6 @@ class RedirectIfAuthenticated
       if ($this->auth->check()) {
           return property_exists($this, 'redirectTo') ? $this->redirectTo : redirect('/dashboard');
       }
-
         return $next($request);
     }
 }

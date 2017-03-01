@@ -13,6 +13,7 @@ class VerifyCsrfToken extends BaseVerifier
      */
     protected $except = [
         '/clock/in',
-        '/clock/out'
+        '/clock/out',
+        '/service/login'
     ];
 }

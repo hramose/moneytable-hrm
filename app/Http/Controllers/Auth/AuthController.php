@@ -40,6 +40,19 @@ class AuthController extends Controller
     }
 
     /**
+     * Handle an authentication attempt.
+     *
+     * @return Response
+     */
+    public function authenticate()
+    {
+        if (Auth::attempt(['email' => $email, 'password' => $password])) {
+            // Authentication passed...
+            return redirect()->intended('dashboard');
+        }
+    }
+
+    /**
      * Get a validator for an incoming registration request.
      *
      * @param  array  $data
@@ -95,10 +108,10 @@ class AuthController extends Controller
     }
 
     public function postRegister(RegisterRequest $request, User $user){
-        
+
         if(!Entrust::can('create_employee')){
             if($request->has('ajax_submit')){
-                $response = ['message' => trans('messages.permission_denied'), 'status' => 'error']; 
+                $response = ['message' => trans('messages.permission_denied'), 'status' => 'error'];
                 return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
             }
             return redirect('/dashboard')->withErrors(trans('messages.permission_denied'));
@@ -106,7 +119,7 @@ class AuthController extends Controller
 
         if(!preg_match('/^[a-zA-Z0-9_\.\-]*$/',$request->input('username'))){
             if($request->has('ajax_submit')){
-                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error']; 
+                $response = ['message' => trans('messages.username_allowed_characters'), 'status' => 'error'];
                 return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
             }
             return redirect('/dashboard')->withErrors(trans('messages.username_allowed_characters'));
@@ -116,7 +129,7 @@ class AuthController extends Controller
             $template = \App\Template::whereCategory('welcome_email')->first();
             if(!$template){
                 if($request->has('ajax_submit')){
-                    $response = ['message' => trans('messages.no_template_found'), 'status' => 'error']; 
+                    $response = ['message' => trans('messages.no_template_found'), 'status' => 'error'];
                     return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
                 }
                 return redirect('/dashboard')->withErrors(trans('messages.no_template_found'));
@@ -156,7 +169,7 @@ class AuthController extends Controller
 
         $this->logActivity(['module' => 'employee','unique_id' => $user->id,'activity' => 'activity_added']);
         if($request->has('ajax_submit')){
-            $response = ['message' => trans('messages.employee').' '.trans('messages.added'), 'status' => 'success']; 
+            $response = ['message' => trans('messages.employee').' '.trans('messages.added'), 'status' => 'success'];
             return response()->json($response, 200, array('Access-Controll-Allow-Origin' => '*'));
         }
         return redirect()->back()->withSuccess(trans('messages.employee').' '.trans('messages.added'));
@@ -172,7 +185,7 @@ class AuthController extends Controller
         } else
         return redirect()->back();
     }
-    
+
     protected $username = 'username';
     protected $redirectPath = '/dashboard';
     protected $loginPath = '/';
